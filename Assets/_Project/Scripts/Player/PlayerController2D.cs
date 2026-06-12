@@ -16,6 +16,8 @@ public class PlayerController2D : MonoBehaviour
     private bool isDashing;
     private float nextDashTime;
 
+    public Vector2 FacingDirection => lastMoveDirection;
+
     private void Awake()
     {
         body = GetComponent<Rigidbody2D>();

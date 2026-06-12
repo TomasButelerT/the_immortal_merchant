@@ -250,6 +250,7 @@ public static class PrototypeSceneBuilder
 
         PlayerAttack attack = player.AddComponent<PlayerAttack>();
         attack.attackPoint = attackPoint.transform;
+        attack.attackDistance = 0.8f;
         attack.attackRadius = 0.75f;
         attack.damage = 10;
         attack.attackCooldown = 0.4f;
