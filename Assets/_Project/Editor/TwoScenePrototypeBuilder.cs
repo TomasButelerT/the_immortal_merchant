@@ -92,7 +92,7 @@ public static class TwoScenePrototypeBuilder
             60, 1.2f, 15, 1.2f, new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f));
 
         BuildShopScene(sprite);
-        BuildDungeonScene(sprite, playerPrefab, normalEnemy, fastEnemy, tankEnemy);
+        BuildDungeonScene(sprite, playerPrefab, normalEnemy, fastEnemy, tankEnemy, tankItem);
         ConfigureBuildSettings();
 
         AssetDatabase.SaveAssets();
@@ -218,37 +218,54 @@ public static class TwoScenePrototypeBuilder
         GameObject playerPrefab,
         GameObject normalEnemyPrefab,
         GameObject fastEnemyPrefab,
-        GameObject tankEnemyPrefab)
+        GameObject tankEnemyPrefab,
+        ItemData chestReward)
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-        CreateCamera(new Color(0.04f, 0.06f, 0.09f));
-        CreateBackground(sprite, new Color(0.12f, 0.18f, 0.22f));
         CreatePersistentSystems();
 
         GameObject player = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab, scene);
-        player.transform.position = Vector3.zero;
+        player.transform.position = new Vector3(-3f, 0f, 0f);
 
-        GameObject[] enemyPrefabs =
-        {
-            normalEnemyPrefab,
-            fastEnemyPrefab,
-            tankEnemyPrefab
-        };
-        Vector3[] enemyPositions =
-        {
-            new Vector3(4f, 0f, 0f),
-            new Vector3(-4f, 2f, 0f),
-            new Vector3(2f, -3f, 0f)
-        };
+        Camera camera = CreateCamera(new Color(0.04f, 0.06f, 0.09f));
+        CameraFollow2D cameraFollow = camera.gameObject.AddComponent<CameraFollow2D>();
+        cameraFollow.target = player.transform;
 
-        for (int i = 0; i < enemyPrefabs.Length; i++)
-        {
-            GameObject enemy = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefabs[i], scene);
-            enemy.transform.position = enemyPositions[i];
-        }
+        CreateRoomGeometry(sprite, "Room1Geometry", Vector2.zero, new Color(0.12f, 0.18f, 0.22f), true, false);
+        CreateRoomGeometry(sprite, "Room2Geometry", new Vector2(18f, 0f), new Color(0.18f, 0.12f, 0.24f), false, true);
+        CreateCorridor(sprite);
+
+        DungeonDoor sharedDoor = CreateDoor(sprite, new Vector2(9f, 0f));
 
         DungeonManager dungeonManager = new GameObject("DungeonManager").AddComponent<DungeonManager>();
-        dungeonManager.exitPortal = CreateExitPortal(sprite);
+        dungeonManager.earlyExitPortal = CreateExitPortal(sprite, "EarlyExitPortal", new Vector2(6.5f, -3.4f));
+        dungeonManager.exitPortal = CreateExitPortal(sprite, "FinalExitPortal", new Vector2(18f, 3.4f));
+
+        RoomEncounter room1 = CreateRoomEncounter(
+            scene,
+            "Room1Encounter",
+            1,
+            true,
+            false,
+            dungeonManager,
+            sharedDoor,
+            new[] { normalEnemyPrefab, fastEnemyPrefab },
+            new[] { new Vector3(2.5f, 1.5f, 0f), new Vector3(3f, -2f, 0f) });
+
+        RoomEncounter room2 = CreateRoomEncounter(
+            scene,
+            "Room2Encounter",
+            2,
+            false,
+            true,
+            dungeonManager,
+            sharedDoor,
+            new[] { tankEnemyPrefab, normalEnemyPrefab, normalEnemyPrefab },
+            new[] { new Vector3(18f, 1.5f, 0f), new Vector3(15.5f, -1.8f, 0f), new Vector3(20.5f, -1.5f, 0f) });
+
+        CreateRoomTrigger(room2, new Vector2(11f, 0f));
+        CreatePrototypeChest(sprite, chestReward, new Vector2(21.5f, 3f));
+        CreateHealingPickup(sprite, new Vector2(15f, 3f));
         CreateDungeonInterface(player.GetComponent<PlayerHealth>(), dungeonManager);
 
         EditorSceneManager.MarkSceneDirty(scene);
@@ -261,7 +278,7 @@ public static class TwoScenePrototypeBuilder
         new GameObject("InventoryManager").AddComponent<InventoryManager>();
     }
 
-    private static void CreateCamera(Color backgroundColor)
+    private static Camera CreateCamera(Color backgroundColor)
     {
         GameObject cameraObject = new GameObject("Main Camera");
         cameraObject.tag = "MainCamera";
@@ -273,6 +290,7 @@ public static class TwoScenePrototypeBuilder
         camera.clearFlags = CameraClearFlags.SolidColor;
         camera.backgroundColor = backgroundColor;
         cameraObject.AddComponent<AudioListener>();
+        return camera;
     }
 
     private static void CreateBackground(Sprite sprite, Color color)
@@ -287,10 +305,10 @@ public static class TwoScenePrototypeBuilder
         renderer.sortingOrder = -10;
     }
 
-    private static DungeonExitPortal CreateExitPortal(Sprite sprite)
+    private static DungeonExitPortal CreateExitPortal(Sprite sprite, string objectName, Vector2 position)
     {
-        GameObject portalObject = new GameObject("DungeonExitPortal");
-        portalObject.transform.position = new Vector3(0f, 4f, 0f);
+        GameObject portalObject = new GameObject(objectName);
+        portalObject.transform.position = position;
         portalObject.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
 
         SpriteRenderer renderer = portalObject.AddComponent<SpriteRenderer>();
@@ -301,6 +319,148 @@ public static class TwoScenePrototypeBuilder
         collider.isTrigger = true;
         collider.radius = 0.55f;
         return portalObject.AddComponent<DungeonExitPortal>();
+    }
+
+    private static void CreateRoomGeometry(
+        Sprite sprite,
+        string roomName,
+        Vector2 center,
+        Color floorColor,
+        bool eastOpening,
+        bool westOpening)
+    {
+        GameObject room = new GameObject(roomName);
+        CreateBlock(sprite, "Floor", center, new Vector2(14f, 10f), floorColor, -10, false, room.transform);
+
+        CreateBlock(sprite, "NorthWall", center + Vector2.up * 5.25f, new Vector2(14.5f, 0.5f), Color.black, 2, true, room.transform);
+        CreateBlock(sprite, "SouthWall", center + Vector2.down * 5.25f, new Vector2(14.5f, 0.5f), Color.black, 2, true, room.transform);
+
+        if (westOpening)
+        {
+            CreateSplitVerticalWall(sprite, center + Vector2.left * 7.25f, room.transform, "WestWall");
+        }
+        else
+        {
+            CreateBlock(sprite, "WestWall", center + Vector2.left * 7.25f, new Vector2(0.5f, 11f), Color.black, 2, true, room.transform);
+        }
+
+        if (eastOpening)
+        {
+            CreateSplitVerticalWall(sprite, center + Vector2.right * 7.25f, room.transform, "EastWall");
+        }
+        else
+        {
+            CreateBlock(sprite, "EastWall", center + Vector2.right * 7.25f, new Vector2(0.5f, 11f), Color.black, 2, true, room.transform);
+        }
+    }
+
+    private static void CreateSplitVerticalWall(Sprite sprite, Vector2 center, Transform parent, string name)
+    {
+        CreateBlock(sprite, name + "Top", center + Vector2.up * 3.5f, new Vector2(0.5f, 4f), Color.black, 2, true, parent);
+        CreateBlock(sprite, name + "Bottom", center + Vector2.down * 3.5f, new Vector2(0.5f, 4f), Color.black, 2, true, parent);
+    }
+
+    private static void CreateCorridor(Sprite sprite)
+    {
+        CreateBlock(sprite, "RoomCorridor", new Vector2(9f, 0f), new Vector2(4f, 3f), new Color(0.15f, 0.15f, 0.18f), -9, false, null);
+        CreateBlock(sprite, "CorridorNorthWall", new Vector2(9f, 1.75f), new Vector2(4f, 0.5f), Color.black, 2, true, null);
+        CreateBlock(sprite, "CorridorSouthWall", new Vector2(9f, -1.75f), new Vector2(4f, 0.5f), Color.black, 2, true, null);
+    }
+
+    private static DungeonDoor CreateDoor(Sprite sprite, Vector2 position)
+    {
+        GameObject doorObject = CreateBlock(sprite, "SharedRoomDoor", position, new Vector2(0.6f, 3f), new Color(0.65f, 0.2f, 0.1f), 4, true, null);
+        return doorObject.AddComponent<DungeonDoor>();
+    }
+
+    private static GameObject CreateBlock(
+        Sprite sprite,
+        string name,
+        Vector2 position,
+        Vector2 scale,
+        Color color,
+        int sortingOrder,
+        bool addCollider,
+        Transform parent)
+    {
+        GameObject block = new GameObject(name);
+        block.transform.position = position;
+        block.transform.localScale = new Vector3(scale.x, scale.y, 1f);
+        if (parent != null)
+        {
+            block.transform.SetParent(parent, true);
+        }
+
+        SpriteRenderer renderer = block.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+        renderer.color = color;
+        renderer.sortingOrder = sortingOrder;
+
+        if (addCollider)
+        {
+            block.AddComponent<BoxCollider2D>();
+        }
+
+        return block;
+    }
+
+    private static RoomEncounter CreateRoomEncounter(
+        Scene scene,
+        string name,
+        int roomNumber,
+        bool startsActive,
+        bool isFinalRoom,
+        DungeonManager dungeonManager,
+        DungeonDoor sharedDoor,
+        GameObject[] enemyPrefabs,
+        Vector3[] enemyPositions)
+    {
+        GameObject roomObject = new GameObject(name);
+        RoomEncounter encounter = roomObject.AddComponent<RoomEncounter>();
+        encounter.roomNumber = roomNumber;
+        encounter.startsActive = startsActive;
+        encounter.isFinalRoom = isFinalRoom;
+        encounter.dungeonManager = dungeonManager;
+        encounter.doors.Add(sharedDoor);
+
+        for (int i = 0; i < enemyPrefabs.Length; i++)
+        {
+            GameObject enemy = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefabs[i], scene);
+            enemy.transform.position = enemyPositions[i];
+            enemy.transform.SetParent(roomObject.transform, true);
+            encounter.enemies.Add(enemy.GetComponent<EnemyHealth>());
+        }
+
+        return encounter;
+    }
+
+    private static void CreateRoomTrigger(RoomEncounter encounter, Vector2 position)
+    {
+        GameObject triggerObject = new GameObject("Room2Trigger");
+        triggerObject.transform.position = position;
+        BoxCollider2D collider = triggerObject.AddComponent<BoxCollider2D>();
+        collider.isTrigger = true;
+        collider.size = new Vector2(1f, 3f);
+        RoomTrigger trigger = triggerObject.AddComponent<RoomTrigger>();
+        trigger.roomEncounter = encounter;
+    }
+
+    private static void CreatePrototypeChest(Sprite sprite, ItemData reward, Vector2 position)
+    {
+        GameObject chest = CreateBlock(sprite, "PrototypeChest", position, new Vector2(0.9f, 0.7f), new Color(0.9f, 0.6f, 0.12f), 4, false, null);
+        BoxCollider2D collider = chest.AddComponent<BoxCollider2D>();
+        collider.isTrigger = true;
+        PrototypeChest prototypeChest = chest.AddComponent<PrototypeChest>();
+        prototypeChest.rewardItem = reward;
+        prototypeChest.amount = 1;
+    }
+
+    private static void CreateHealingPickup(Sprite sprite, Vector2 position)
+    {
+        GameObject healing = CreateBlock(sprite, "HealingPickup", position, new Vector2(0.55f, 0.55f), new Color(0.2f, 1f, 0.35f), 4, false, null);
+        CircleCollider2D collider = healing.AddComponent<CircleCollider2D>();
+        collider.isTrigger = true;
+        healing.AddComponent<HealingPickup>().healAmount = 25;
     }
 
     private static void CreateShopInterface(ShopManager shop, SceneNavigation navigation)

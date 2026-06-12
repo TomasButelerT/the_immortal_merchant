@@ -65,10 +65,10 @@ public class EnemyHealth : MonoBehaviour
 
     public void Die()
     {
-        DungeonManager dungeonManager = FindAnyObjectByType<DungeonManager>();
-        if (dungeonManager != null)
+        RoomEncounter roomEncounter = GetComponentInParent<RoomEncounter>();
+        if (roomEncounter != null)
         {
-            dungeonManager.EnemyDefeated();
+            roomEncounter.EnemyDefeated(this);
         }
 
         if (itemDropPrefab != null)

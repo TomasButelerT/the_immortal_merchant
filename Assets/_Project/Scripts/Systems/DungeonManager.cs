@@ -5,35 +5,42 @@ public class DungeonManager : MonoBehaviour
 {
     public TMP_Text enemiesRemainingText;
     public DungeonExitPortal exitPortal;
+    public DungeonExitPortal earlyExitPortal;
 
-    private int enemiesRemaining;
-
-    private void Start()
+    public void RoomStarted(int roomNumber, int enemiesRemaining)
     {
-        enemiesRemaining = FindObjectsByType<EnemyHealth>().Length;
-        RefreshState();
+        UpdateRoomStatus(roomNumber, enemiesRemaining, false);
     }
 
-    public void EnemyDefeated()
+    public void RoomProgress(int roomNumber, int enemiesRemaining)
     {
-        enemiesRemaining = Mathf.Max(enemiesRemaining - 1, 0);
-        RefreshState();
+        UpdateRoomStatus(roomNumber, enemiesRemaining, false);
     }
 
-    private void RefreshState()
+    public void RoomCleared(int roomNumber, bool isFinalRoom)
     {
-        bool dungeonCleared = enemiesRemaining == 0;
+        UpdateRoomStatus(roomNumber, 0, true);
 
-        if (enemiesRemainingText != null)
+        if (roomNumber == 1 && earlyExitPortal != null)
         {
-            enemiesRemainingText.text = dungeonCleared
-                ? "Dungeon cleared - Exit portal open"
-                : $"Enemies remaining: {enemiesRemaining}";
+            earlyExitPortal.SetUnlocked(true);
         }
 
-        if (exitPortal != null)
+        if (isFinalRoom && exitPortal != null)
         {
-            exitPortal.SetUnlocked(dungeonCleared);
+            exitPortal.SetUnlocked(true);
         }
+    }
+
+    private void UpdateRoomStatus(int roomNumber, int enemiesRemaining, bool cleared)
+    {
+        if (enemiesRemainingText == null)
+        {
+            return;
+        }
+
+        enemiesRemainingText.text = cleared
+            ? $"Room {roomNumber} cleared"
+            : $"Room {roomNumber} - Enemies: {enemiesRemaining}";
     }
 }
