@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -6,6 +7,8 @@ public class GameManager : MonoBehaviour
 
     public int gold;
     public int corruptionLevel;
+    public int damageUpgradeLevel;
+    public int damageBonus;
 
     private void Awake()
     {
@@ -38,6 +41,28 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
+    public bool BuyDamageUpgrade(int cost, int damageIncrease)
+    {
+        if (damageIncrease <= 0 || !SpendGold(cost))
+        {
+            return false;
+        }
+
+        damageUpgradeLevel++;
+        damageBonus += damageIncrease;
+        return true;
+    }
+
+    public void EnterDungeon()
+    {
+        SceneManager.LoadScene("DungeonScene");
+    }
+
+    public void ReturnToShop()
+    {
+        SceneManager.LoadScene("ShopScene");
+    }
+
     public void OnPlayerDeath()
     {
         if (InventoryManager.Instance != null)
@@ -45,6 +70,6 @@ public class GameManager : MonoBehaviour
             InventoryManager.Instance.ClearRunInventory();
         }
 
-        // Later this can return to the shop or restart the dungeon.
+        ReturnToShop();
     }
 }

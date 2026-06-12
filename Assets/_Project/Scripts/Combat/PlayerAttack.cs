@@ -11,6 +11,14 @@ public class PlayerAttack : MonoBehaviour
 
     private float nextAttackTime;
 
+    private void Start()
+    {
+        if (GameManager.Instance != null)
+        {
+            damage += GameManager.Instance.damageBonus;
+        }
+    }
+
     private void Update()
     {
         Keyboard keyboard = Keyboard.current;

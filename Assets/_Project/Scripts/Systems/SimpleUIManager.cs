@@ -7,6 +7,7 @@ public class SimpleUIManager : MonoBehaviour
     public TMP_Text goldText;
     public TMP_Text healthText;
     public TMP_Text inventoryText;
+    public TMP_Text upgradeText;
     public PlayerHealth playerHealth;
 
     private void Update()
@@ -14,6 +15,7 @@ public class SimpleUIManager : MonoBehaviour
         RefreshGold();
         RefreshHealth();
         RefreshInventory();
+        RefreshUpgrade();
     }
 
     private void RefreshGold()
@@ -51,5 +53,15 @@ public class SimpleUIManager : MonoBehaviour
         }
 
         inventoryText.text = builder.ToString();
+    }
+
+    private void RefreshUpgrade()
+    {
+        if (upgradeText != null)
+        {
+            int level = GameManager.Instance != null ? GameManager.Instance.damageUpgradeLevel : 0;
+            int bonus = GameManager.Instance != null ? GameManager.Instance.damageBonus : 0;
+            upgradeText.text = $"Damage upgrade: {level} (+{bonus})";
+        }
     }
 }

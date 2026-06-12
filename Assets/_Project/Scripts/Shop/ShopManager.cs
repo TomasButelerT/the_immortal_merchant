@@ -4,7 +4,6 @@ public class ShopManager : MonoBehaviour
 {
     public int damageUpgradeCost = 25;
     public int damageIncrease = 5;
-    public int damageUpgradeLevel;
 
     public void SellAll()
     {
@@ -16,20 +15,11 @@ public class ShopManager : MonoBehaviour
 
     public void BuyDamageUpgrade()
     {
-        if (GameManager.Instance == null || !GameManager.Instance.SpendGold(damageUpgradeCost))
+        if (GameManager.Instance == null)
         {
             return;
         }
 
-        PlayerAttack playerAttack = FindAnyObjectByType<PlayerAttack>();
-        if (playerAttack == null)
-        {
-            GameManager.Instance.AddGold(damageUpgradeCost);
-            Debug.LogWarning("No PlayerAttack was found. The purchase was refunded.");
-            return;
-        }
-
-        playerAttack.damage += damageIncrease;
-        damageUpgradeLevel++;
+        GameManager.Instance.BuyDamageUpgrade(damageUpgradeCost, damageIncrease);
     }
 }
