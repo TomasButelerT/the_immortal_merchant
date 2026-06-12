@@ -6,6 +6,8 @@ public class PlayerHealth : MonoBehaviour
     public int maxHealth = 100;
     public int currentHealth;
     public float invulnerabilityDuration = 0.75f;
+    public float knockbackForce = 6f;
+    public float knockbackDuration = 0.15f;
 
     private bool isInvulnerable;
     private SpriteRenderer playerRenderer;
@@ -24,6 +26,11 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        TakeDamage(amount, Vector2.zero);
+    }
+
+    public void TakeDamage(int amount, Vector2 damageSourcePosition)
+    {
         if (amount <= 0 || currentHealth <= 0 || isInvulnerable)
         {
             return;
@@ -35,6 +42,13 @@ public class PlayerHealth : MonoBehaviour
         {
             Die();
             return;
+        }
+
+        PlayerController2D controller = GetComponent<PlayerController2D>();
+        if (controller != null && damageSourcePosition != Vector2.zero)
+        {
+            Vector2 direction = (Vector2)transform.position - damageSourcePosition;
+            controller.ApplyKnockback(direction, knockbackForce, knockbackDuration);
         }
 
         StartCoroutine(InvulnerabilityRoutine());

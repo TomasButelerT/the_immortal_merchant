@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -10,6 +11,7 @@ public class EnemyChaser : MonoBehaviour
     private Rigidbody2D body;
     private Transform player;
     private float nextDamageTime;
+    private bool isKnockedBack;
 
     private void Awake()
     {
@@ -33,6 +35,11 @@ public class EnemyChaser : MonoBehaviour
             return;
         }
 
+        if (isKnockedBack)
+        {
+            return;
+        }
+
         Vector2 direction = (player.position - transform.position).normalized;
         body.linearVelocity = direction * moveSpeed;
     }
@@ -47,8 +54,24 @@ public class EnemyChaser : MonoBehaviour
         PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
         if (playerHealth != null)
         {
-            playerHealth.TakeDamage(contactDamage);
+            playerHealth.TakeDamage(contactDamage, transform.position);
             nextDamageTime = Time.time + damageInterval;
         }
+    }
+
+    public void ApplyKnockback(Vector2 direction, float force, float duration)
+    {
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(KnockbackRoutine(direction.normalized, force, duration));
+        }
+    }
+
+    private IEnumerator KnockbackRoutine(Vector2 direction, float force, float duration)
+    {
+        isKnockedBack = true;
+        body.linearVelocity = direction * force;
+        yield return new WaitForSeconds(duration);
+        isKnockedBack = false;
     }
 }

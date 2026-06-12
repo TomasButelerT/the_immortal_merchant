@@ -9,6 +9,8 @@ public class PlayerAttack : MonoBehaviour
     public float attackRadius = 0.75f;
     public int damage = 10;
     public float attackCooldown = 0.4f;
+    public float knockbackForce = 7f;
+    public float knockbackDuration = 0.15f;
     public LayerMask enemyLayers;
 
     private float nextAttackTime;
@@ -66,7 +68,8 @@ public class PlayerAttack : MonoBehaviour
             EnemyHealth enemyHealth = hit.GetComponentInParent<EnemyHealth>();
             if (enemyHealth != null)
             {
-                enemyHealth.TakeDamage(damage);
+                Vector2 knockbackDirection = enemyHealth.transform.position - transform.position;
+                enemyHealth.TakeDamage(damage, knockbackDirection, knockbackForce, knockbackDuration);
             }
         }
     }

@@ -14,6 +14,7 @@ public class PlayerController2D : MonoBehaviour
     private Vector2 moveInput;
     private Vector2 lastMoveDirection = Vector2.down;
     private bool isDashing;
+    private bool isKnockedBack;
     private float nextDashTime;
 
     public Vector2 FacingDirection => lastMoveDirection;
@@ -61,9 +62,17 @@ public class PlayerController2D : MonoBehaviour
     // Applies top-down movement through the Rigidbody2D.
     private void Move()
     {
-        if (!isDashing)
+        if (!isDashing && !isKnockedBack)
         {
             body.linearVelocity = moveInput * moveSpeed;
+        }
+    }
+
+    public void ApplyKnockback(Vector2 direction, float force, float duration)
+    {
+        if (gameObject.activeInHierarchy)
+        {
+            StartCoroutine(KnockbackRoutine(direction.normalized, force, duration));
         }
     }
 
@@ -86,5 +95,13 @@ public class PlayerController2D : MonoBehaviour
         yield return new WaitForSeconds(dashDuration);
 
         isDashing = false;
+    }
+
+    private IEnumerator KnockbackRoutine(Vector2 direction, float force, float duration)
+    {
+        isKnockedBack = true;
+        body.linearVelocity = direction * force;
+        yield return new WaitForSeconds(duration);
+        isKnockedBack = false;
     }
 }
