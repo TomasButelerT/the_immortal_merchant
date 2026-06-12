@@ -16,6 +16,10 @@ public static class TwoScenePrototypeBuilder
     private const string SpritePath = "Assets/_Project/Art/Sprites/PrototypeSquare.png";
     private const string PlayerPrefabPath = "Assets/_Project/Prefabs/Player/PrototypePlayer.prefab";
     private const string EnemyPrefabPath = "Assets/_Project/Prefabs/Enemies/PrototypeEnemy.prefab";
+    private const string PickupPrefabPath = "Assets/_Project/Prefabs/Items/TestRelicPickup.prefab";
+    private const string NormalEnemyPath = "Assets/_Project/Prefabs/Enemies/PrototypeNormalEnemy.prefab";
+    private const string FastEnemyPath = "Assets/_Project/Prefabs/Enemies/PrototypeFastEnemy.prefab";
+    private const string TankEnemyPath = "Assets/_Project/Prefabs/Enemies/PrototypeTankEnemy.prefab";
 
     [MenuItem("Tools/The Immortal Merchant/Build Shop + Dungeon Scenes")]
     public static void BuildScenes()
@@ -36,10 +40,59 @@ public static class TwoScenePrototypeBuilder
 
         Sprite sprite = LoadRequiredAsset<Sprite>(SpritePath);
         GameObject playerPrefab = LoadRequiredAsset<GameObject>(PlayerPrefabPath);
-        GameObject enemyPrefab = LoadRequiredAsset<GameObject>(EnemyPrefabPath);
+        GameObject baseEnemyPrefab = LoadRequiredAsset<GameObject>(EnemyPrefabPath);
+        GameObject basePickupPrefab = LoadRequiredAsset<GameObject>(PickupPrefabPath);
+
+        ItemData normalItem = CreateOrUpdateItem(
+            "Assets/_Project/ScriptableObjects/Items/PrototypeScrap.asset",
+            "prototype_scrap",
+            "Prototype Scrap",
+            20,
+            ItemRarity.Common);
+        ItemData fastItem = CreateOrUpdateItem(
+            "Assets/_Project/ScriptableObjects/Items/PrototypeSwiftShard.asset",
+            "prototype_swift_shard",
+            "Prototype Swift Shard",
+            30,
+            ItemRarity.Uncommon);
+        ItemData tankItem = CreateOrUpdateItem(
+            "Assets/_Project/ScriptableObjects/Items/PrototypeHeavyCore.asset",
+            "prototype_heavy_core",
+            "Prototype Heavy Core",
+            50,
+            ItemRarity.Rare);
+
+        GameObject normalPickup = CreatePickupVariant(
+            basePickupPrefab,
+            "Assets/_Project/Prefabs/Items/PrototypeScrapPickup.prefab",
+            "PrototypeScrapPickup",
+            normalItem,
+            new Color(0.95f, 0.78f, 0.2f));
+        GameObject fastPickup = CreatePickupVariant(
+            basePickupPrefab,
+            "Assets/_Project/Prefabs/Items/PrototypeSwiftShardPickup.prefab",
+            "PrototypeSwiftShardPickup",
+            fastItem,
+            new Color(0.25f, 0.95f, 0.95f));
+        GameObject tankPickup = CreatePickupVariant(
+            basePickupPrefab,
+            "Assets/_Project/Prefabs/Items/PrototypeHeavyCorePickup.prefab",
+            "PrototypeHeavyCorePickup",
+            tankItem,
+            new Color(0.72f, 0.35f, 1f));
+
+        GameObject normalEnemy = CreateEnemyVariant(
+            baseEnemyPrefab, NormalEnemyPath, "PrototypeNormalEnemy", normalPickup,
+            30, 2f, 10, 1f, Vector3.one, new Color(0.9f, 0.18f, 0.18f));
+        GameObject fastEnemy = CreateEnemyVariant(
+            baseEnemyPrefab, FastEnemyPath, "PrototypeFastEnemy", fastPickup,
+            20, 3.5f, 7, 0.7f, new Vector3(0.75f, 0.75f, 1f), new Color(1f, 0.45f, 0.12f));
+        GameObject tankEnemy = CreateEnemyVariant(
+            baseEnemyPrefab, TankEnemyPath, "PrototypeTankEnemy", tankPickup,
+            60, 1.2f, 15, 1.2f, new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f));
 
         BuildShopScene(sprite);
-        BuildDungeonScene(sprite, playerPrefab, enemyPrefab);
+        BuildDungeonScene(sprite, playerPrefab, normalEnemy, fastEnemy, tankEnemy);
         ConfigureBuildSettings();
 
         AssetDatabase.SaveAssets();
@@ -71,6 +124,76 @@ public static class TwoScenePrototypeBuilder
         return asset;
     }
 
+    private static ItemData CreateOrUpdateItem(
+        string path,
+        string itemId,
+        string displayName,
+        int sellPrice,
+        ItemRarity rarity)
+    {
+        ItemData item = AssetDatabase.LoadAssetAtPath<ItemData>(path);
+        if (item == null)
+        {
+            item = ScriptableObject.CreateInstance<ItemData>();
+            AssetDatabase.CreateAsset(item, path);
+        }
+
+        item.itemId = itemId;
+        item.displayName = displayName;
+        item.sellPrice = sellPrice;
+        item.rarity = rarity;
+        item.description = "Temporary content used to validate prototype variety.";
+        EditorUtility.SetDirty(item);
+        return item;
+    }
+
+    private static GameObject CreatePickupVariant(
+        GameObject basePrefab,
+        string path,
+        string objectName,
+        ItemData item,
+        Color color)
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(basePrefab));
+        root.name = objectName;
+        root.GetComponent<ItemPickup>().itemData = item;
+        root.GetComponent<SpriteRenderer>().color = color;
+        PrefabUtility.SaveAsPrefabAsset(root, path);
+        PrefabUtility.UnloadPrefabContents(root);
+        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+    }
+
+    private static GameObject CreateEnemyVariant(
+        GameObject basePrefab,
+        string path,
+        string objectName,
+        GameObject dropPrefab,
+        int maxHealth,
+        float moveSpeed,
+        int contactDamage,
+        float damageInterval,
+        Vector3 scale,
+        Color color)
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(basePrefab));
+        root.name = objectName;
+        root.transform.localScale = scale;
+        root.GetComponent<SpriteRenderer>().color = color;
+
+        EnemyHealth health = root.GetComponent<EnemyHealth>();
+        health.maxHealth = maxHealth;
+        health.itemDropPrefab = dropPrefab;
+
+        EnemyChaser chaser = root.GetComponent<EnemyChaser>();
+        chaser.moveSpeed = moveSpeed;
+        chaser.contactDamage = contactDamage;
+        chaser.damageInterval = damageInterval;
+
+        PrefabUtility.SaveAsPrefabAsset(root, path);
+        PrefabUtility.UnloadPrefabContents(root);
+        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+    }
+
     private static void BuildShopScene(Sprite sprite)
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -90,7 +213,12 @@ public static class TwoScenePrototypeBuilder
         EditorSceneManager.SaveScene(scene, ShopScenePath);
     }
 
-    private static void BuildDungeonScene(Sprite sprite, GameObject playerPrefab, GameObject enemyPrefab)
+    private static void BuildDungeonScene(
+        Sprite sprite,
+        GameObject playerPrefab,
+        GameObject normalEnemyPrefab,
+        GameObject fastEnemyPrefab,
+        GameObject tankEnemyPrefab)
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         CreateCamera(new Color(0.04f, 0.06f, 0.09f));
@@ -100,6 +228,12 @@ public static class TwoScenePrototypeBuilder
         GameObject player = (GameObject)PrefabUtility.InstantiatePrefab(playerPrefab, scene);
         player.transform.position = Vector3.zero;
 
+        GameObject[] enemyPrefabs =
+        {
+            normalEnemyPrefab,
+            fastEnemyPrefab,
+            tankEnemyPrefab
+        };
         Vector3[] enemyPositions =
         {
             new Vector3(4f, 0f, 0f),
@@ -107,10 +241,10 @@ public static class TwoScenePrototypeBuilder
             new Vector3(2f, -3f, 0f)
         };
 
-        foreach (Vector3 position in enemyPositions)
+        for (int i = 0; i < enemyPrefabs.Length; i++)
         {
-            GameObject enemy = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefab, scene);
-            enemy.transform.position = position;
+            GameObject enemy = (GameObject)PrefabUtility.InstantiatePrefab(enemyPrefabs[i], scene);
+            enemy.transform.position = enemyPositions[i];
         }
 
         DungeonManager dungeonManager = new GameObject("DungeonManager").AddComponent<DungeonManager>();

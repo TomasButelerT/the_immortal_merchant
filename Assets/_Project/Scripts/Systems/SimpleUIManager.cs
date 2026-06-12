@@ -67,7 +67,15 @@ public class SimpleUIManager : MonoBehaviour
             foreach (RunInventoryEntry entry in InventoryManager.Instance.RunInventory)
             {
                 string itemName = entry.itemData != null ? entry.itemData.displayName : entry.itemId;
-                builder.Append($"\n{itemName} x{entry.amount}");
+                if (entry.itemData != null)
+                {
+                    builder.Append(
+                        $"\n{itemName} [{entry.itemData.rarity}] x{entry.amount} - {entry.itemData.sellPrice} gold each");
+                }
+                else
+                {
+                    builder.Append($"\n{itemName} x{entry.amount}");
+                }
             }
         }
 
