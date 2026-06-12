@@ -113,8 +113,9 @@ public static class TwoScenePrototypeBuilder
             enemy.transform.position = position;
         }
 
-        SceneNavigation navigation = new GameObject("SceneNavigation").AddComponent<SceneNavigation>();
-        CreateDungeonInterface(player.GetComponent<PlayerHealth>(), navigation);
+        DungeonManager dungeonManager = new GameObject("DungeonManager").AddComponent<DungeonManager>();
+        dungeonManager.exitPortal = CreateExitPortal(sprite);
+        CreateDungeonInterface(player.GetComponent<PlayerHealth>(), dungeonManager);
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene, DungeonScenePath);
@@ -152,6 +153,22 @@ public static class TwoScenePrototypeBuilder
         renderer.sortingOrder = -10;
     }
 
+    private static DungeonExitPortal CreateExitPortal(Sprite sprite)
+    {
+        GameObject portalObject = new GameObject("DungeonExitPortal");
+        portalObject.transform.position = new Vector3(0f, 4f, 0f);
+        portalObject.transform.localScale = new Vector3(1.4f, 1.4f, 1f);
+
+        SpriteRenderer renderer = portalObject.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+        renderer.sortingOrder = 5;
+
+        CircleCollider2D collider = portalObject.AddComponent<CircleCollider2D>();
+        collider.isTrigger = true;
+        collider.radius = 0.55f;
+        return portalObject.AddComponent<DungeonExitPortal>();
+    }
+
     private static void CreateShopInterface(ShopManager shop, SceneNavigation navigation)
     {
         Canvas canvas = CreateCanvas();
@@ -177,7 +194,7 @@ public static class TwoScenePrototypeBuilder
         CreateEventSystem();
     }
 
-    private static void CreateDungeonInterface(PlayerHealth health, SceneNavigation navigation)
+    private static void CreateDungeonInterface(PlayerHealth health, DungeonManager dungeonManager)
     {
         Canvas canvas = CreateCanvas();
         CreateTitle(canvas.transform, "DUNGEON");
@@ -187,6 +204,19 @@ public static class TwoScenePrototypeBuilder
         TextMeshProUGUI inventory = CreateText(canvas.transform, "InventoryText", "Run inventory:", new Vector2(30f, -195f), 26f);
         inventory.rectTransform.sizeDelta = new Vector2(550f, 300f);
         TextMeshProUGUI upgrade = CreateText(canvas.transform, "UpgradeText", "Damage upgrade: 0 (+0)", new Vector2(30f, -500f), 26f);
+        TextMeshProUGUI enemiesRemaining = CreateText(
+            canvas.transform,
+            "EnemiesRemainingText",
+            "Enemies remaining: 3",
+            new Vector2(0f, -85f),
+            28f);
+        RectTransform enemiesRect = enemiesRemaining.rectTransform;
+        enemiesRect.anchorMin = new Vector2(0.5f, 1f);
+        enemiesRect.anchorMax = new Vector2(0.5f, 1f);
+        enemiesRect.pivot = new Vector2(0.5f, 1f);
+        enemiesRect.anchoredPosition = new Vector2(0f, -85f);
+        enemiesRect.sizeDelta = new Vector2(700f, 50f);
+        enemiesRemaining.alignment = TextAlignmentOptions.Center;
 
         TextMeshProUGUI controls = CreateText(
             canvas.transform,
@@ -205,8 +235,7 @@ public static class TwoScenePrototypeBuilder
         ui.upgradeText = upgrade;
         ui.playerHealth = health;
 
-        Button shop = CreateButton(canvas.transform, "ReturnToShopButton", "Return To Shop", new Vector2(-40f, 40f));
-        UnityEventTools.AddPersistentListener(shop.onClick, navigation.ReturnToShop);
+        dungeonManager.enemiesRemainingText = enemiesRemaining;
         CreateEventSystem();
     }
 

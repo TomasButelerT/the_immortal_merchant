@@ -65,6 +65,12 @@ public class EnemyHealth : MonoBehaviour
 
     public void Die()
     {
+        DungeonManager dungeonManager = FindAnyObjectByType<DungeonManager>();
+        if (dungeonManager != null)
+        {
+            dungeonManager.EnemyDefeated();
+        }
+
         if (itemDropPrefab != null)
         {
             Instantiate(itemDropPrefab, transform.position, Quaternion.identity);
