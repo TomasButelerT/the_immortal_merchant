@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7ebff1ae6dd18b45b20fca8d31d1e87, type: 3}
   m_Name: PrototypeNormalDrops
   m_EditorClassIdentifier: Assembly-CSharp::DropTableData
-  dropChance: 0.2
+  dropChance: 0.75
   entries:
   - pickupPrefab: {fileID: 4235887308348283285, guid: 67553efe88dc606459820ef3b4a2084c, type: 3}
     weight: 1

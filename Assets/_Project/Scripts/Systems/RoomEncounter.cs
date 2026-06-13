@@ -13,6 +13,9 @@ public class RoomEncounter : MonoBehaviour
 
     private bool hasStarted;
 
+    public bool HasStarted => hasStarted;
+    public bool IsCleared => CountLivingEnemies() == 0;
+
     private void Start()
     {
         foreach (EnemyHealth enemy in enemies)
@@ -64,6 +67,18 @@ public class RoomEncounter : MonoBehaviour
         if (livingEnemies == 0)
         {
             CompleteRoom();
+        }
+    }
+
+    public void DebugClearRoom()
+    {
+        List<EnemyHealth> livingEnemies = new List<EnemyHealth>(enemies);
+        foreach (EnemyHealth enemy in livingEnemies)
+        {
+            if (enemy != null && enemy.gameObject.activeInHierarchy)
+            {
+                enemy.Die();
+            }
         }
     }
 

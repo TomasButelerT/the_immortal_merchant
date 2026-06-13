@@ -645,12 +645,19 @@ public static class TwoScenePrototypeBuilder
         ui.runSummaryText = runSummary;
         ui.shopManager = shop;
 
+        PrototypeDebugTools debugTools = new GameObject("PrototypeDebugTools").AddComponent<PrototypeDebugTools>();
+        Transform debugPanel = CreateDebugPanel(canvas.transform);
+        debugTools.debugPanel = debugPanel.gameObject;
+
         Button sell = CreateButton(canvas.transform, "SellButton", "Sell All Loot", new Vector2(-40f, 280f));
         Button damageButton = CreateButton(canvas.transform, "DamageUpgradeButton", "Buy Damage", new Vector2(-40f, 210f));
         Button healthButton = CreateButton(canvas.transform, "HealthUpgradeButton", "Buy Max Health", new Vector2(-40f, 140f));
         Button speedButton = CreateButton(canvas.transform, "SpeedUpgradeButton", "Buy Move Speed", new Vector2(-40f, 70f));
         Button dungeon = CreateButton(canvas.transform, "EnterDungeonButton", "Enter Dungeon", new Vector2(-450f, 70f));
         Button reset = CreateButton(canvas.transform, "ResetSaveButton", "Reset Save", new Vector2(-450f, 140f));
+        CreateDebugLabel(debugPanel);
+        Button testGold = CreateDebugButton(debugPanel, "DebugGoldButton", "+100 Gold", new Vector2(20f, 20f));
+        Button savePath = CreateDebugButton(debugPanel, "DebugSavePathButton", "Log Save Path", new Vector2(210f, 20f));
 
         UnityEventTools.AddPersistentListener(sell.onClick, shop.SellAll);
         UnityEventTools.AddPersistentListener(damageButton.onClick, shop.BuyDamageUpgrade);
@@ -658,6 +665,8 @@ public static class TwoScenePrototypeBuilder
         UnityEventTools.AddPersistentListener(speedButton.onClick, shop.BuyMoveSpeedUpgrade);
         UnityEventTools.AddPersistentListener(dungeon.onClick, navigation.EnterDungeon);
         UnityEventTools.AddPersistentListener(reset.onClick, shop.ResetSave);
+        UnityEventTools.AddPersistentListener(testGold.onClick, debugTools.AddTestGold);
+        UnityEventTools.AddPersistentListener(savePath.onClick, debugTools.LogSavePath);
         CreateEventSystem();
     }
 
@@ -701,6 +710,16 @@ public static class TwoScenePrototypeBuilder
         ui.inventoryText = inventory;
         ui.upgradeText = upgrade;
         ui.playerHealth = health;
+
+        PrototypeDebugTools debugTools = new GameObject("PrototypeDebugTools").AddComponent<PrototypeDebugTools>();
+        debugTools.playerHealth = health;
+        Transform debugPanel = CreateDebugPanel(canvas.transform);
+        debugTools.debugPanel = debugPanel.gameObject;
+        CreateDebugLabel(debugPanel);
+        Button heal = CreateDebugButton(debugPanel, "DebugHealButton", "Heal Player", new Vector2(20f, 20f));
+        Button clearRoom = CreateDebugButton(debugPanel, "DebugClearRoomButton", "Clear Active Room", new Vector2(210f, 20f));
+        UnityEventTools.AddPersistentListener(heal.onClick, debugTools.HealPlayer);
+        UnityEventTools.AddPersistentListener(clearRoom.onClick, debugTools.ClearActiveRoom);
 
         dungeonManager.enemiesRemainingText = enemiesRemaining;
         CreateEventSystem();
@@ -784,6 +803,43 @@ public static class TwoScenePrototypeBuilder
         textRect.anchoredPosition = Vector2.zero;
         textRect.sizeDelta = Vector2.zero;
         text.alignment = TextAlignmentOptions.Center;
+        return button;
+    }
+
+    private static void CreateDebugLabel(Transform parent)
+    {
+        TextMeshProUGUI label = CreateText(parent, "DebugLabel", "[DEBUG]", new Vector2(20f, 100f), 22f);
+        RectTransform rect = label.rectTransform;
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.zero;
+        rect.pivot = Vector2.zero;
+        rect.anchoredPosition = new Vector2(20f, 100f);
+        rect.sizeDelta = new Vector2(180f, 35f);
+        label.color = new Color(1f, 0.65f, 0.15f);
+    }
+
+    private static Transform CreateDebugPanel(Transform parent)
+    {
+        GameObject panel = new GameObject("DebugPanel", typeof(RectTransform));
+        panel.transform.SetParent(parent, false);
+        RectTransform rect = panel.GetComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.offsetMin = Vector2.zero;
+        rect.offsetMax = Vector2.zero;
+        return panel.transform;
+    }
+
+    private static Button CreateDebugButton(Transform parent, string name, string label, Vector2 position)
+    {
+        Button button = CreateButton(parent, name, label, Vector2.zero);
+        RectTransform rect = button.GetComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.zero;
+        rect.pivot = Vector2.zero;
+        rect.anchoredPosition = position;
+        rect.sizeDelta = new Vector2(175f, 50f);
+        button.GetComponent<Image>().color = new Color(0.55f, 0.28f, 0.08f, 0.95f);
         return button;
     }
 
