@@ -63,4 +63,12 @@ public class ShopManager : MonoBehaviour
 
         return upgrade.GetCost(GameManager.Instance.GetUpgradeLevel(upgrade.statType));
     }
+
+    public void ResetSave()
+    {
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.ResetProgress();
+        }
+    }
 }

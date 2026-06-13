@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        LoadProgress();
     }
 
     public void AddGold(int amount)
@@ -34,6 +35,7 @@ public class GameManager : MonoBehaviour
         if (amount > 0)
         {
             gold += amount;
+            SaveProgress();
         }
     }
 
@@ -45,6 +47,7 @@ public class GameManager : MonoBehaviour
         }
 
         gold -= amount;
+        SaveProgress();
         return true;
     }
 
@@ -57,6 +60,7 @@ public class GameManager : MonoBehaviour
 
         damageUpgradeLevel++;
         damageBonus += damageIncrease;
+        SaveProgress();
         return true;
     }
 
@@ -104,6 +108,7 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
+        SaveProgress();
         return true;
     }
 
@@ -119,6 +124,7 @@ public class GameManager : MonoBehaviour
         {
             RecordRunSummary(true);
             runInProgress = false;
+            SaveProgress();
         }
 
         SceneManager.LoadScene("ShopScene");
@@ -128,6 +134,7 @@ public class GameManager : MonoBehaviour
     {
         RecordRunSummary(false);
         runInProgress = false;
+        SaveProgress();
 
         if (InventoryManager.Instance != null)
         {
@@ -149,5 +156,63 @@ public class GameManager : MonoBehaviour
         lastRunSummary = survived
             ? $"Last run: escaped with {itemCount} items worth {inventoryValue} gold."
             : $"Last run: defeated and lost {itemCount} items worth {inventoryValue} gold.";
+    }
+
+    public void SaveProgress()
+    {
+        SaveSystem.Save(new PermanentProgressData
+        {
+            gold = gold,
+            corruptionLevel = corruptionLevel,
+            damageUpgradeLevel = damageUpgradeLevel,
+            damageBonus = damageBonus,
+            healthUpgradeLevel = healthUpgradeLevel,
+            maxHealthBonus = maxHealthBonus,
+            moveSpeedUpgradeLevel = moveSpeedUpgradeLevel,
+            moveSpeedBonus = moveSpeedBonus,
+            lastRunSummary = lastRunSummary
+        });
+    }
+
+    public void ResetProgress()
+    {
+        gold = 0;
+        corruptionLevel = 0;
+        damageUpgradeLevel = 0;
+        damageBonus = 0;
+        healthUpgradeLevel = 0;
+        maxHealthBonus = 0;
+        moveSpeedUpgradeLevel = 0;
+        moveSpeedBonus = 0f;
+        lastRunSummary = "No completed runs yet.";
+
+        InventoryManager.Instance?.ClearRunInventory();
+        SaveSystem.Delete();
+    }
+
+    private void LoadProgress()
+    {
+        PermanentProgressData data = SaveSystem.Load();
+        if (data == null)
+        {
+            return;
+        }
+
+        gold = data.gold;
+        corruptionLevel = data.corruptionLevel;
+        damageUpgradeLevel = data.damageUpgradeLevel;
+        damageBonus = data.damageBonus;
+        healthUpgradeLevel = data.healthUpgradeLevel;
+        maxHealthBonus = data.maxHealthBonus;
+        moveSpeedUpgradeLevel = data.moveSpeedUpgradeLevel;
+        moveSpeedBonus = data.moveSpeedBonus;
+        lastRunSummary = string.IsNullOrEmpty(data.lastRunSummary)
+            ? "No completed runs yet."
+            : data.lastRunSummary;
+    }
+
+    private void OnApplicationQuit()
+    {
+        SaveProgress();
     }
 }

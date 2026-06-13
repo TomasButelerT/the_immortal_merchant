@@ -82,13 +82,13 @@ public static class TwoScenePrototypeBuilder
             new Color(0.72f, 0.35f, 1f));
 
         DropTableData normalDrops = CreateOrUpdateDropTable(
-            "Assets/_Project/ScriptableObjects/Items/PrototypeNormalDrops.asset", 0.2f,
+            "Assets/_Project/ScriptableObjects/Items/PrototypeNormalDrops.asset", 0.75f,
             new[] { normalPickup }, new[] { 1f });
         DropTableData fastDrops = CreateOrUpdateDropTable(
-            "Assets/_Project/ScriptableObjects/Items/PrototypeFastDrops.asset", 0.1f,
+            "Assets/_Project/ScriptableObjects/Items/PrototypeFastDrops.asset", 0.65f,
             new[] { fastPickup }, new[] { 1f });
         DropTableData tankDrops = CreateOrUpdateDropTable(
-            "Assets/_Project/ScriptableObjects/Items/PrototypeTankDrops.asset", 0.35f,
+            "Assets/_Project/ScriptableObjects/Items/PrototypeTankDrops.asset", 0.9f,
             new[] { tankPickup }, new[] { 1f });
         DropTableData chestDrops = CreateOrUpdateDropTable(
             "Assets/_Project/ScriptableObjects/Items/PrototypeChestDrops.asset", 1f,
@@ -650,12 +650,14 @@ public static class TwoScenePrototypeBuilder
         Button healthButton = CreateButton(canvas.transform, "HealthUpgradeButton", "Buy Max Health", new Vector2(-40f, 140f));
         Button speedButton = CreateButton(canvas.transform, "SpeedUpgradeButton", "Buy Move Speed", new Vector2(-40f, 70f));
         Button dungeon = CreateButton(canvas.transform, "EnterDungeonButton", "Enter Dungeon", new Vector2(-450f, 70f));
+        Button reset = CreateButton(canvas.transform, "ResetSaveButton", "Reset Save", new Vector2(-450f, 140f));
 
         UnityEventTools.AddPersistentListener(sell.onClick, shop.SellAll);
         UnityEventTools.AddPersistentListener(damageButton.onClick, shop.BuyDamageUpgrade);
         UnityEventTools.AddPersistentListener(healthButton.onClick, shop.BuyHealthUpgrade);
         UnityEventTools.AddPersistentListener(speedButton.onClick, shop.BuyMoveSpeedUpgrade);
         UnityEventTools.AddPersistentListener(dungeon.onClick, navigation.EnterDungeon);
+        UnityEventTools.AddPersistentListener(reset.onClick, shop.ResetSave);
         CreateEventSystem();
     }
 
