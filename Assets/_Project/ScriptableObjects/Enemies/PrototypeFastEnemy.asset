@@ -18,6 +18,12 @@ MonoBehaviour:
   moveSpeed: 3.5
   contactDamage: 7
   damageInterval: 0.7
+  attackRange: 1.05
+  attackWindup: 0.25
+  attackRecovery: 0.4
+  usesRangedAttack: 0
+  preferredDistance: 4
+  projectileSpeed: 7
   scale: {x: 0.75, y: 0.75, z: 1}
   prototypeColor: {r: 1, g: 0.45, b: 0.12, a: 1}
   dropTable: {fileID: 11400000, guid: 2b9fd4a57d43b0b44a9fdcbf7424f70a, type: 2}

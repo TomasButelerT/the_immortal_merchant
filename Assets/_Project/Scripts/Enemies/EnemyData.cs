@@ -12,6 +12,9 @@ public class EnemyData : ScriptableObject
     public float attackRange = 1.25f;
     public float attackWindup = 0.45f;
     public float attackRecovery = 0.65f;
+    public bool usesRangedAttack;
+    public float preferredDistance = 4f;
+    public float projectileSpeed = 7f;
     public Vector3 scale = Vector3.one;
     public Color prototypeColor = Color.red;
     public DropTableData dropTable;

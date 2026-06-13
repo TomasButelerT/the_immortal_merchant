@@ -201,3 +201,6 @@ MonoBehaviour:
   moveSpeed: 2
   contactDamage: 10
   damageInterval: 1
+  attackRange: 1.25
+  attackWindup: 0.45
+  attackRecovery: 0.65

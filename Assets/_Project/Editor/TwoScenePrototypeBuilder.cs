@@ -20,6 +20,8 @@ public static class TwoScenePrototypeBuilder
     private const string NormalEnemyPath = "Assets/_Project/Prefabs/Enemies/PrototypeNormalEnemy.prefab";
     private const string FastEnemyPath = "Assets/_Project/Prefabs/Enemies/PrototypeFastEnemy.prefab";
     private const string TankEnemyPath = "Assets/_Project/Prefabs/Enemies/PrototypeTankEnemy.prefab";
+    private const string RangedEnemyPath = "Assets/_Project/Prefabs/Enemies/PrototypeRangedEnemy.prefab";
+    private const string EnemyProjectilePath = "Assets/_Project/Prefabs/Enemies/PrototypeEnemyProjectile.prefab";
 
     [MenuItem("Tools/The Immortal Merchant/Build Shop + Dungeon Scenes")]
     public static void BuildScenes()
@@ -109,6 +111,15 @@ public static class TwoScenePrototypeBuilder
             "prototype_tank", "Prototype Tank Enemy", 60, 1.2f, 15, 1.2f,
             1.6f, 0.85f, 1f,
             new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f), tankDrops);
+        EnemyData rangedData = CreateOrUpdateEnemyData(
+            "Assets/_Project/ScriptableObjects/Enemies/PrototypeRangedEnemy.asset",
+            "prototype_ranged", "Prototype Ranged Enemy", 25, 2f, 10, 1.2f,
+            7f, 0.75f, 0.55f,
+            new Vector3(0.9f, 0.9f, 1f), new Color(0.15f, 0.8f, 1f), fastDrops);
+        rangedData.usesRangedAttack = true;
+        rangedData.preferredDistance = 4.5f;
+        rangedData.projectileSpeed = 7f;
+        EditorUtility.SetDirty(rangedData);
 
         UpgradeData damageUpgrade = CreateOrUpdateUpgrade(
             "Assets/_Project/ScriptableObjects/Upgrades/PrototypeDamageUpgrade.asset",
@@ -126,6 +137,9 @@ public static class TwoScenePrototypeBuilder
             baseEnemyPrefab, FastEnemyPath, "PrototypeFastEnemy", fastData);
         GameObject tankEnemy = CreateEnemyVariant(
             baseEnemyPrefab, TankEnemyPath, "PrototypeTankEnemy", tankData);
+        GameObject enemyProjectile = CreateEnemyProjectilePrefab(sprite);
+        GameObject rangedEnemy = CreateRangedEnemyVariant(
+            baseEnemyPrefab, RangedEnemyPath, "PrototypeRangedEnemy", rangedData, enemyProjectile);
 
         BuildShopScene(sprite, damageUpgrade, healthUpgrade, speedUpgrade);
         BuildDungeonScene(
@@ -134,6 +148,7 @@ public static class TwoScenePrototypeBuilder
             normalEnemy,
             fastEnemy,
             tankEnemy,
+            rangedEnemy,
             chestDrops);
         ConfigureBuildSettings();
 
@@ -233,6 +248,61 @@ public static class TwoScenePrototypeBuilder
         PrefabUtility.SaveAsPrefabAsset(root, path);
         PrefabUtility.UnloadPrefabContents(root);
         return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+    }
+
+    private static GameObject CreateRangedEnemyVariant(
+        GameObject basePrefab,
+        string path,
+        string objectName,
+        EnemyData enemyData,
+        GameObject projectilePrefab)
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(basePrefab));
+        root.name = objectName;
+        root.transform.localScale = enemyData.scale;
+        root.GetComponent<SpriteRenderer>().color = enemyData.prototypeColor;
+
+        EnemyHealth health = root.GetComponent<EnemyHealth>();
+        health.enemyData = enemyData;
+        health.maxHealth = enemyData.maxHealth;
+        health.itemDropPrefab = null;
+
+        EnemyChaser chaser = root.GetComponent<EnemyChaser>();
+        if (chaser != null)
+        {
+            Object.DestroyImmediate(chaser);
+        }
+
+        EnemyRangedAttacker rangedAttacker = root.AddComponent<EnemyRangedAttacker>();
+        rangedAttacker.enemyData = enemyData;
+        rangedAttacker.projectilePrefab = projectilePrefab;
+
+        PrefabUtility.SaveAsPrefabAsset(root, path);
+        PrefabUtility.UnloadPrefabContents(root);
+        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+    }
+
+    private static GameObject CreateEnemyProjectilePrefab(Sprite sprite)
+    {
+        GameObject projectile = new GameObject("PrototypeEnemyProjectile");
+        projectile.transform.localScale = new Vector3(0.25f, 0.25f, 1f);
+
+        SpriteRenderer renderer = projectile.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+        renderer.color = new Color(0.2f, 0.9f, 1f);
+        renderer.sortingOrder = 15;
+
+        CircleCollider2D collider = projectile.AddComponent<CircleCollider2D>();
+        collider.isTrigger = true;
+
+        Rigidbody2D body = projectile.AddComponent<Rigidbody2D>();
+        body.bodyType = RigidbodyType2D.Kinematic;
+        body.gravityScale = 0f;
+
+        projectile.AddComponent<EnemyProjectile>();
+        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(projectile, EnemyProjectilePath);
+        Object.DestroyImmediate(projectile);
+        return prefab;
     }
 
     private static DropTableData CreateOrUpdateDropTable(
@@ -361,6 +431,7 @@ public static class TwoScenePrototypeBuilder
         GameObject normalEnemyPrefab,
         GameObject fastEnemyPrefab,
         GameObject tankEnemyPrefab,
+        GameObject rangedEnemyPrefab,
         DropTableData chestRewards)
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -408,7 +479,7 @@ public static class TwoScenePrototypeBuilder
             true,
             dungeonManager,
             new[] { combatDoor },
-            new[] { tankEnemyPrefab, normalEnemyPrefab, normalEnemyPrefab },
+            new[] { tankEnemyPrefab, normalEnemyPrefab, rangedEnemyPrefab },
             new[] { new Vector3(18f, 8.5f, 0f), new Vector3(15.5f, 5.2f, 0f), new Vector3(20.5f, 5.5f, 0f) });
         combatRoom.completionPortal = combatExit;
 

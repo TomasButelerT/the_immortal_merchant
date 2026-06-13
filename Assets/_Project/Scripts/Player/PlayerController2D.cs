@@ -15,6 +15,7 @@ public class PlayerController2D : MonoBehaviour
     private Vector2 lastMoveDirection = Vector2.down;
     private bool isDashing;
     private bool isKnockedBack;
+    private bool movementLocked;
     private float nextDashTime;
 
     public Vector2 FacingDirection => lastMoveDirection;
@@ -67,9 +68,18 @@ public class PlayerController2D : MonoBehaviour
     // Applies top-down movement through the Rigidbody2D.
     private void Move()
     {
-        if (!isDashing && !isKnockedBack)
+        if (!isDashing && !isKnockedBack && !movementLocked)
         {
             body.linearVelocity = moveInput * moveSpeed;
+        }
+    }
+
+    public void SetMovementLocked(bool locked)
+    {
+        movementLocked = locked;
+        if (locked)
+        {
+            body.linearVelocity = Vector2.zero;
         }
     }
 
@@ -84,6 +94,12 @@ public class PlayerController2D : MonoBehaviour
     public void Dash()
     {
         if (isDashing || Time.time < nextDashTime)
+        {
+            return;
+        }
+
+        PlayerAttack playerAttack = GetComponent<PlayerAttack>();
+        if (playerAttack != null && !playerAttack.TryCancelForDash())
         {
             return;
         }

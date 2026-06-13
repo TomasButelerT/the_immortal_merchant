@@ -57,6 +57,12 @@ public class EnemyHealth : MonoBehaviour
             chaser.ApplyKnockback(knockbackDirection, knockbackForce, knockbackDuration);
         }
 
+        EnemyRangedAttacker rangedAttacker = GetComponent<EnemyRangedAttacker>();
+        if (rangedAttacker != null && knockbackForce > 0f)
+        {
+            rangedAttacker.ApplyKnockback(knockbackDirection, knockbackForce, knockbackDuration);
+        }
+
         if (hitFlashRoutine != null)
         {
             StopCoroutine(hitFlashRoutine);
