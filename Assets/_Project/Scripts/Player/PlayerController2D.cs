@@ -22,6 +22,11 @@ public class PlayerController2D : MonoBehaviour
     private void Awake()
     {
         body = GetComponent<Rigidbody2D>();
+
+        if (GameManager.Instance != null)
+        {
+            moveSpeed += GameManager.Instance.moveSpeedBonus;
+        }
     }
 
     private void Update()

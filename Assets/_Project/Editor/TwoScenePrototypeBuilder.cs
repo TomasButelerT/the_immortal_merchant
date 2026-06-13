@@ -107,6 +107,16 @@ public static class TwoScenePrototypeBuilder
             "prototype_tank", "Prototype Tank Enemy", 60, 1.2f, 15, 1.2f,
             new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f), tankDrops);
 
+        UpgradeData damageUpgrade = CreateOrUpdateUpgrade(
+            "Assets/_Project/ScriptableObjects/Upgrades/PrototypeDamageUpgrade.asset",
+            "prototype_damage", "Damage", UpgradeStatType.Damage, 20, 15, 5f);
+        UpgradeData healthUpgrade = CreateOrUpdateUpgrade(
+            "Assets/_Project/ScriptableObjects/Upgrades/PrototypeHealthUpgrade.asset",
+            "prototype_health", "Max Health", UpgradeStatType.MaxHealth, 25, 20, 20f);
+        UpgradeData speedUpgrade = CreateOrUpdateUpgrade(
+            "Assets/_Project/ScriptableObjects/Upgrades/PrototypeMoveSpeedUpgrade.asset",
+            "prototype_speed", "Move Speed", UpgradeStatType.MoveSpeed, 30, 25, 0.5f);
+
         GameObject normalEnemy = CreateEnemyVariant(
             baseEnemyPrefab, NormalEnemyPath, "PrototypeNormalEnemy", normalData);
         GameObject fastEnemy = CreateEnemyVariant(
@@ -114,7 +124,7 @@ public static class TwoScenePrototypeBuilder
         GameObject tankEnemy = CreateEnemyVariant(
             baseEnemyPrefab, TankEnemyPath, "PrototypeTankEnemy", tankData);
 
-        BuildShopScene(sprite);
+        BuildShopScene(sprite, damageUpgrade, healthUpgrade, speedUpgrade);
         BuildDungeonScene(
             sprite,
             playerPrefab,
@@ -279,7 +289,38 @@ public static class TwoScenePrototypeBuilder
         return data;
     }
 
-    private static void BuildShopScene(Sprite sprite)
+    private static UpgradeData CreateOrUpdateUpgrade(
+        string path,
+        string upgradeId,
+        string displayName,
+        UpgradeStatType statType,
+        int baseCost,
+        int costIncrease,
+        float valuePerLevel)
+    {
+        UpgradeData upgrade = AssetDatabase.LoadAssetAtPath<UpgradeData>(path);
+        if (upgrade == null)
+        {
+            upgrade = ScriptableObject.CreateInstance<UpgradeData>();
+            AssetDatabase.CreateAsset(upgrade, path);
+        }
+
+        upgrade.upgradeId = upgradeId;
+        upgrade.displayName = displayName;
+        upgrade.statType = statType;
+        upgrade.baseCost = baseCost;
+        upgrade.costIncreasePerLevel = costIncrease;
+        upgrade.valuePerLevel = valuePerLevel;
+        upgrade.description = "Temporary upgrade used to validate shop progression.";
+        EditorUtility.SetDirty(upgrade);
+        return upgrade;
+    }
+
+    private static void BuildShopScene(
+        Sprite sprite,
+        UpgradeData damageUpgrade,
+        UpgradeData healthUpgrade,
+        UpgradeData speedUpgrade)
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         CreateCamera(new Color(0.09f, 0.07f, 0.05f));
@@ -291,6 +332,9 @@ public static class TwoScenePrototypeBuilder
         shop.damageUpgradeCost = 20;
         shop.damageUpgradeCostIncrease = 15;
         shop.damageIncrease = 5;
+        shop.damageUpgrade = damageUpgrade;
+        shop.healthUpgrade = healthUpgrade;
+        shop.moveSpeedUpgrade = speedUpgrade;
 
         SceneNavigation navigation = new GameObject("SceneNavigation").AddComponent<SceneNavigation>();
         CreateShopInterface(shop, navigation);
@@ -589,8 +633,9 @@ public static class TwoScenePrototypeBuilder
         TextMeshProUGUI gold = CreateText(canvas.transform, "GoldText", "Gold: 0", new Vector2(30f, -100f), 34f);
         TextMeshProUGUI inventory = CreateText(canvas.transform, "InventoryText", "Run inventory:", new Vector2(30f, -155f), 28f);
         inventory.rectTransform.sizeDelta = new Vector2(600f, 350f);
-        TextMeshProUGUI upgrade = CreateText(canvas.transform, "UpgradeText", "Damage upgrade: 0 (+0)", new Vector2(30f, -520f), 28f);
-        TextMeshProUGUI runSummary = CreateText(canvas.transform, "RunSummaryText", "No completed runs yet.", new Vector2(30f, -585f), 26f);
+        TextMeshProUGUI upgrade = CreateText(canvas.transform, "UpgradeText", "Upgrades", new Vector2(30f, -520f), 28f);
+        upgrade.rectTransform.sizeDelta = new Vector2(1000f, 150f);
+        TextMeshProUGUI runSummary = CreateText(canvas.transform, "RunSummaryText", "No completed runs yet.", new Vector2(30f, -690f), 26f);
         runSummary.rectTransform.sizeDelta = new Vector2(1000f, 90f);
 
         SimpleUIManager ui = canvas.gameObject.AddComponent<SimpleUIManager>();
@@ -600,12 +645,16 @@ public static class TwoScenePrototypeBuilder
         ui.runSummaryText = runSummary;
         ui.shopManager = shop;
 
-        Button sell = CreateButton(canvas.transform, "SellButton", "Sell All Loot", new Vector2(-40f, 210f));
-        Button upgradeButton = CreateButton(canvas.transform, "UpgradeButton", "Buy Damage +5", new Vector2(-40f, 140f));
-        Button dungeon = CreateButton(canvas.transform, "EnterDungeonButton", "Enter Dungeon", new Vector2(-40f, 40f));
+        Button sell = CreateButton(canvas.transform, "SellButton", "Sell All Loot", new Vector2(-40f, 280f));
+        Button damageButton = CreateButton(canvas.transform, "DamageUpgradeButton", "Buy Damage", new Vector2(-40f, 210f));
+        Button healthButton = CreateButton(canvas.transform, "HealthUpgradeButton", "Buy Max Health", new Vector2(-40f, 140f));
+        Button speedButton = CreateButton(canvas.transform, "SpeedUpgradeButton", "Buy Move Speed", new Vector2(-40f, 70f));
+        Button dungeon = CreateButton(canvas.transform, "EnterDungeonButton", "Enter Dungeon", new Vector2(-450f, 70f));
 
         UnityEventTools.AddPersistentListener(sell.onClick, shop.SellAll);
-        UnityEventTools.AddPersistentListener(upgradeButton.onClick, shop.BuyDamageUpgrade);
+        UnityEventTools.AddPersistentListener(damageButton.onClick, shop.BuyDamageUpgrade);
+        UnityEventTools.AddPersistentListener(healthButton.onClick, shop.BuyHealthUpgrade);
+        UnityEventTools.AddPersistentListener(speedButton.onClick, shop.BuyMoveSpeedUpgrade);
         UnityEventTools.AddPersistentListener(dungeon.onClick, navigation.EnterDungeon);
         CreateEventSystem();
     }

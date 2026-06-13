@@ -9,6 +9,10 @@ public class GameManager : MonoBehaviour
     public int corruptionLevel;
     public int damageUpgradeLevel;
     public int damageBonus;
+    public int healthUpgradeLevel;
+    public int maxHealthBonus;
+    public int moveSpeedUpgradeLevel;
+    public float moveSpeedBonus;
     public string lastRunSummary = "No completed runs yet.";
 
     private bool runInProgress;
@@ -53,6 +57,53 @@ public class GameManager : MonoBehaviour
 
         damageUpgradeLevel++;
         damageBonus += damageIncrease;
+        return true;
+    }
+
+    public int GetUpgradeLevel(UpgradeStatType statType)
+    {
+        switch (statType)
+        {
+            case UpgradeStatType.Damage:
+                return damageUpgradeLevel;
+            case UpgradeStatType.MaxHealth:
+                return healthUpgradeLevel;
+            case UpgradeStatType.MoveSpeed:
+                return moveSpeedUpgradeLevel;
+            default:
+                return 0;
+        }
+    }
+
+    public bool BuyUpgrade(UpgradeData upgrade)
+    {
+        if (upgrade == null)
+        {
+            return false;
+        }
+
+        int currentLevel = GetUpgradeLevel(upgrade.statType);
+        if (!SpendGold(upgrade.GetCost(currentLevel)))
+        {
+            return false;
+        }
+
+        switch (upgrade.statType)
+        {
+            case UpgradeStatType.Damage:
+                damageUpgradeLevel++;
+                damageBonus += Mathf.RoundToInt(upgrade.valuePerLevel);
+                break;
+            case UpgradeStatType.MaxHealth:
+                healthUpgradeLevel++;
+                maxHealthBonus += Mathf.RoundToInt(upgrade.valuePerLevel);
+                break;
+            case UpgradeStatType.MoveSpeed:
+                moveSpeedUpgradeLevel++;
+                moveSpeedBonus += upgrade.valuePerLevel;
+                break;
+        }
+
         return true;
     }
 

@@ -91,12 +91,38 @@ public class SimpleUIManager : MonoBehaviour
     {
         if (upgradeText != null)
         {
-            int level = GameManager.Instance != null ? GameManager.Instance.damageUpgradeLevel : 0;
-            int bonus = GameManager.Instance != null ? GameManager.Instance.damageBonus : 0;
-            int nextCost = shopManager != null ? shopManager.CurrentDamageUpgradeCost : 0;
-            string costText = shopManager != null ? $" - Next cost: {nextCost}" : string.Empty;
-            upgradeText.text = $"Damage upgrade: {level} (+{bonus}){costText}";
+            if (GameManager.Instance == null)
+            {
+                upgradeText.text = "Upgrades unavailable";
+                return;
+            }
+
+            if (shopManager != null)
+            {
+                upgradeText.text =
+                    $"Upgrades:\n{FormatUpgrade(shopManager.damageUpgrade)}\n"
+                    + $"{FormatUpgrade(shopManager.healthUpgrade)}\n"
+                    + FormatUpgrade(shopManager.moveSpeedUpgrade);
+            }
+            else
+            {
+                upgradeText.text =
+                    $"Damage Lv.{GameManager.Instance.damageUpgradeLevel} (+{GameManager.Instance.damageBonus})\n"
+                    + $"Health Lv.{GameManager.Instance.healthUpgradeLevel} (+{GameManager.Instance.maxHealthBonus})\n"
+                    + $"Speed Lv.{GameManager.Instance.moveSpeedUpgradeLevel} (+{GameManager.Instance.moveSpeedBonus:0.0})";
+            }
         }
+    }
+
+    private string FormatUpgrade(UpgradeData upgrade)
+    {
+        if (upgrade == null || GameManager.Instance == null || shopManager == null)
+        {
+            return "Not configured";
+        }
+
+        int level = GameManager.Instance.GetUpgradeLevel(upgrade.statType);
+        return $"{upgrade.displayName}: Lv.{level} - Next cost {shopManager.GetUpgradeCost(upgrade)}";
     }
 
     private void RefreshRunSummary()

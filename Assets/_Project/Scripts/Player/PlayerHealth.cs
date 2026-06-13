@@ -15,6 +15,11 @@ public class PlayerHealth : MonoBehaviour
 
     private void Awake()
     {
+        if (GameManager.Instance != null)
+        {
+            maxHealth += GameManager.Instance.maxHealthBonus;
+        }
+
         currentHealth = maxHealth;
         playerRenderer = GetComponent<SpriteRenderer>();
 
