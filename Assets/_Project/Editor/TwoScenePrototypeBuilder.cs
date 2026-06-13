@@ -83,16 +83,22 @@ public static class TwoScenePrototypeBuilder
 
         GameObject normalEnemy = CreateEnemyVariant(
             baseEnemyPrefab, NormalEnemyPath, "PrototypeNormalEnemy", normalPickup,
-            30, 2f, 10, 1f, Vector3.one, new Color(0.9f, 0.18f, 0.18f));
+            0.2f, 30, 2f, 10, 1f, Vector3.one, new Color(0.9f, 0.18f, 0.18f));
         GameObject fastEnemy = CreateEnemyVariant(
             baseEnemyPrefab, FastEnemyPath, "PrototypeFastEnemy", fastPickup,
-            20, 3.5f, 7, 0.7f, new Vector3(0.75f, 0.75f, 1f), new Color(1f, 0.45f, 0.12f));
+            0.1f, 20, 3.5f, 7, 0.7f, new Vector3(0.75f, 0.75f, 1f), new Color(1f, 0.45f, 0.12f));
         GameObject tankEnemy = CreateEnemyVariant(
             baseEnemyPrefab, TankEnemyPath, "PrototypeTankEnemy", tankPickup,
-            60, 1.2f, 15, 1.2f, new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f));
+            0.35f, 60, 1.2f, 15, 1.2f, new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f));
 
         BuildShopScene(sprite);
-        BuildDungeonScene(sprite, playerPrefab, normalEnemy, fastEnemy, tankEnemy, tankItem);
+        BuildDungeonScene(
+            sprite,
+            playerPrefab,
+            normalEnemy,
+            fastEnemy,
+            tankEnemy,
+            new[] { normalItem, fastItem, tankItem });
         ConfigureBuildSettings();
 
         AssetDatabase.SaveAssets();
@@ -168,6 +174,7 @@ public static class TwoScenePrototypeBuilder
         string path,
         string objectName,
         GameObject dropPrefab,
+        float dropChance,
         int maxHealth,
         float moveSpeed,
         int contactDamage,
@@ -183,6 +190,7 @@ public static class TwoScenePrototypeBuilder
         EnemyHealth health = root.GetComponent<EnemyHealth>();
         health.maxHealth = maxHealth;
         health.itemDropPrefab = dropPrefab;
+        health.itemDropChance = dropChance;
 
         EnemyChaser chaser = root.GetComponent<EnemyChaser>();
         chaser.moveSpeed = moveSpeed;
@@ -204,6 +212,7 @@ public static class TwoScenePrototypeBuilder
         GameObject shopObject = new GameObject("Shop");
         ShopManager shop = shopObject.AddComponent<ShopManager>();
         shop.damageUpgradeCost = 20;
+        shop.damageUpgradeCostIncrease = 15;
         shop.damageIncrease = 5;
 
         SceneNavigation navigation = new GameObject("SceneNavigation").AddComponent<SceneNavigation>();
@@ -219,7 +228,7 @@ public static class TwoScenePrototypeBuilder
         GameObject normalEnemyPrefab,
         GameObject fastEnemyPrefab,
         GameObject tankEnemyPrefab,
-        ItemData chestReward)
+        ItemData[] chestRewards)
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         CreatePersistentSystems();
@@ -276,7 +285,7 @@ public static class TwoScenePrototypeBuilder
 
         CreateRouteChoiceTrigger(routeChoice, true, new Vector2(11f, 5f));
         CreateRouteChoiceTrigger(routeChoice, false, new Vector2(11f, -5f));
-        CreatePrototypeChest(sprite, chestReward, new Vector2(19.5f, -7f));
+        CreatePrototypeChest(sprite, chestRewards, new Vector2(19.5f, -7f));
         CreateHealingPickup(sprite, new Vector2(16.5f, -7f));
         CreateDungeonInterface(player.GetComponent<PlayerHealth>(), dungeonManager);
         routeChoice.statusText = dungeonManager.enemiesRemainingText;
@@ -476,13 +485,13 @@ public static class TwoScenePrototypeBuilder
         trigger.choosesCombatRoute = combatRoute;
     }
 
-    private static void CreatePrototypeChest(Sprite sprite, ItemData reward, Vector2 position)
+    private static void CreatePrototypeChest(Sprite sprite, ItemData[] rewards, Vector2 position)
     {
         GameObject chest = CreateBlock(sprite, "PrototypeChest", position, new Vector2(0.9f, 0.7f), new Color(0.9f, 0.6f, 0.12f), 4, false, null);
         BoxCollider2D collider = chest.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         PrototypeChest prototypeChest = chest.AddComponent<PrototypeChest>();
-        prototypeChest.rewardItem = reward;
+        prototypeChest.rewardItems = rewards;
         prototypeChest.amount = 1;
     }
 
@@ -503,14 +512,18 @@ public static class TwoScenePrototypeBuilder
         TextMeshProUGUI inventory = CreateText(canvas.transform, "InventoryText", "Run inventory:", new Vector2(30f, -155f), 28f);
         inventory.rectTransform.sizeDelta = new Vector2(600f, 350f);
         TextMeshProUGUI upgrade = CreateText(canvas.transform, "UpgradeText", "Damage upgrade: 0 (+0)", new Vector2(30f, -520f), 28f);
+        TextMeshProUGUI runSummary = CreateText(canvas.transform, "RunSummaryText", "No completed runs yet.", new Vector2(30f, -585f), 26f);
+        runSummary.rectTransform.sizeDelta = new Vector2(1000f, 90f);
 
         SimpleUIManager ui = canvas.gameObject.AddComponent<SimpleUIManager>();
         ui.goldText = gold;
         ui.inventoryText = inventory;
         ui.upgradeText = upgrade;
+        ui.runSummaryText = runSummary;
+        ui.shopManager = shop;
 
         Button sell = CreateButton(canvas.transform, "SellButton", "Sell All Loot", new Vector2(-40f, 210f));
-        Button upgradeButton = CreateButton(canvas.transform, "UpgradeButton", "Buy Damage +5 (20 gold)", new Vector2(-40f, 140f));
+        Button upgradeButton = CreateButton(canvas.transform, "UpgradeButton", "Buy Damage +5", new Vector2(-40f, 140f));
         Button dungeon = CreateButton(canvas.transform, "EnterDungeonButton", "Enter Dungeon", new Vector2(-40f, 40f));
 
         UnityEventTools.AddPersistentListener(sell.onClick, shop.SellAll);

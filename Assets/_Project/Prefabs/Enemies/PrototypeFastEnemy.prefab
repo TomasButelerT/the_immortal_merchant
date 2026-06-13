@@ -183,6 +183,7 @@ MonoBehaviour:
   maxHealth: 20
   currentHealth: 0
   itemDropPrefab: {fileID: 4702019296393692232, guid: bda3c3228cc880247bfcf754ba09c8a4, type: 3}
+  itemDropChance: 0.1
 --- !u!114 &6136153188201949378
 MonoBehaviour:
   m_ObjectHideFlags: 0

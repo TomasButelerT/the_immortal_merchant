@@ -9,6 +9,8 @@ public class SimpleUIManager : MonoBehaviour
     public TMP_Text healthText;
     public TMP_Text inventoryText;
     public TMP_Text upgradeText;
+    public TMP_Text runSummaryText;
+    public ShopManager shopManager;
     public PlayerHealth playerHealth;
 
     private RectTransform playerHealthFillRect;
@@ -27,6 +29,7 @@ public class SimpleUIManager : MonoBehaviour
         RefreshHealth();
         RefreshInventory();
         RefreshUpgrade();
+        RefreshRunSummary();
     }
 
     private void RefreshGold()
@@ -77,6 +80,8 @@ public class SimpleUIManager : MonoBehaviour
                     builder.Append($"\n{itemName} x{entry.amount}");
                 }
             }
+
+            builder.Append($"\nPotential value: {InventoryManager.Instance.GetRunInventoryValue()} gold");
         }
 
         inventoryText.text = builder.ToString();
@@ -88,7 +93,17 @@ public class SimpleUIManager : MonoBehaviour
         {
             int level = GameManager.Instance != null ? GameManager.Instance.damageUpgradeLevel : 0;
             int bonus = GameManager.Instance != null ? GameManager.Instance.damageBonus : 0;
-            upgradeText.text = $"Damage upgrade: {level} (+{bonus})";
+            int nextCost = shopManager != null ? shopManager.CurrentDamageUpgradeCost : 0;
+            string costText = shopManager != null ? $" - Next cost: {nextCost}" : string.Empty;
+            upgradeText.text = $"Damage upgrade: {level} (+{bonus}){costText}";
+        }
+    }
+
+    private void RefreshRunSummary()
+    {
+        if (runSummaryText != null && GameManager.Instance != null)
+        {
+            runSummaryText.text = GameManager.Instance.lastRunSummary;
         }
     }
 

@@ -58,6 +58,31 @@ public class InventoryManager : MonoBehaviour
         runInventory.Clear();
     }
 
+    public int GetRunItemCount()
+    {
+        int totalItems = 0;
+        foreach (RunInventoryEntry entry in runInventory)
+        {
+            totalItems += entry.amount;
+        }
+
+        return totalItems;
+    }
+
+    public int GetRunInventoryValue()
+    {
+        int totalValue = 0;
+        foreach (RunInventoryEntry entry in runInventory)
+        {
+            if (entry.itemData != null)
+            {
+                totalValue += entry.itemData.sellPrice * entry.amount;
+            }
+        }
+
+        return totalValue;
+    }
+
     public void SellAllRunItems()
     {
         if (GameManager.Instance == null)
@@ -66,16 +91,7 @@ public class InventoryManager : MonoBehaviour
             return;
         }
 
-        int totalGold = 0;
-        foreach (RunInventoryEntry entry in runInventory)
-        {
-            if (entry.itemData != null)
-            {
-                totalGold += entry.itemData.sellPrice * entry.amount;
-            }
-        }
-
-        GameManager.Instance.AddGold(totalGold);
+        GameManager.Instance.AddGold(GetRunInventoryValue());
         ClearRunInventory();
     }
 }

@@ -6,6 +6,7 @@ public class EnemyHealth : MonoBehaviour
     public int maxHealth = 30;
     public int currentHealth;
     public GameObject itemDropPrefab;
+    [Range(0f, 1f)] public float itemDropChance = 1f;
 
     private SpriteRenderer enemyRenderer;
     private Color normalColor;
@@ -71,7 +72,7 @@ public class EnemyHealth : MonoBehaviour
             roomEncounter.EnemyDefeated(this);
         }
 
-        if (itemDropPrefab != null)
+        if (itemDropPrefab != null && Random.value <= itemDropChance)
         {
             Instantiate(itemDropPrefab, transform.position, Quaternion.identity);
         }

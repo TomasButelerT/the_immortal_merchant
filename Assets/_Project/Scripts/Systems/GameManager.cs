@@ -9,6 +9,9 @@ public class GameManager : MonoBehaviour
     public int corruptionLevel;
     public int damageUpgradeLevel;
     public int damageBonus;
+    public string lastRunSummary = "No completed runs yet.";
+
+    private bool runInProgress;
 
     private void Awake()
     {
@@ -55,21 +58,45 @@ public class GameManager : MonoBehaviour
 
     public void EnterDungeon()
     {
+        runInProgress = true;
         SceneManager.LoadScene("DungeonScene");
     }
 
     public void ReturnToShop()
     {
+        if (runInProgress)
+        {
+            RecordRunSummary(true);
+            runInProgress = false;
+        }
+
         SceneManager.LoadScene("ShopScene");
     }
 
     public void OnPlayerDeath()
     {
+        RecordRunSummary(false);
+        runInProgress = false;
+
         if (InventoryManager.Instance != null)
         {
             InventoryManager.Instance.ClearRunInventory();
         }
 
-        ReturnToShop();
+        SceneManager.LoadScene("ShopScene");
+    }
+
+    private void RecordRunSummary(bool survived)
+    {
+        int itemCount = InventoryManager.Instance != null
+            ? InventoryManager.Instance.GetRunItemCount()
+            : 0;
+        int inventoryValue = InventoryManager.Instance != null
+            ? InventoryManager.Instance.GetRunInventoryValue()
+            : 0;
+
+        lastRunSummary = survived
+            ? $"Last run: escaped with {itemCount} items worth {inventoryValue} gold."
+            : $"Last run: defeated and lost {itemCount} items worth {inventoryValue} gold.";
     }
 }

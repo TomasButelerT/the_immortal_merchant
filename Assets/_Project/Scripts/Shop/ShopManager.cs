@@ -3,7 +3,11 @@ using UnityEngine;
 public class ShopManager : MonoBehaviour
 {
     public int damageUpgradeCost = 25;
+    public int damageUpgradeCostIncrease = 15;
     public int damageIncrease = 5;
+
+    public int CurrentDamageUpgradeCost => damageUpgradeCost
+        + (GameManager.Instance != null ? GameManager.Instance.damageUpgradeLevel * damageUpgradeCostIncrease : 0);
 
     public void SellAll()
     {
@@ -20,6 +24,6 @@ public class ShopManager : MonoBehaviour
             return;
         }
 
-        GameManager.Instance.BuyDamageUpgrade(damageUpgradeCost, damageIncrease);
+        GameManager.Instance.BuyDamageUpgrade(CurrentDamageUpgradeCost, damageIncrease);
     }
 }
