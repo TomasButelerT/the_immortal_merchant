@@ -97,14 +97,17 @@ public static class TwoScenePrototypeBuilder
         EnemyData normalData = CreateOrUpdateEnemyData(
             "Assets/_Project/ScriptableObjects/Enemies/PrototypeNormalEnemy.asset",
             "prototype_normal", "Prototype Normal Enemy", 30, 2f, 10, 1f,
+            1.25f, 0.45f, 0.65f,
             Vector3.one, new Color(0.9f, 0.18f, 0.18f), normalDrops);
         EnemyData fastData = CreateOrUpdateEnemyData(
             "Assets/_Project/ScriptableObjects/Enemies/PrototypeFastEnemy.asset",
             "prototype_fast", "Prototype Fast Enemy", 20, 3.5f, 7, 0.7f,
+            1.05f, 0.25f, 0.4f,
             new Vector3(0.75f, 0.75f, 1f), new Color(1f, 0.45f, 0.12f), fastDrops);
         EnemyData tankData = CreateOrUpdateEnemyData(
             "Assets/_Project/ScriptableObjects/Enemies/PrototypeTankEnemy.asset",
             "prototype_tank", "Prototype Tank Enemy", 60, 1.2f, 15, 1.2f,
+            1.6f, 0.85f, 1f,
             new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f), tankDrops);
 
         UpgradeData damageUpgrade = CreateOrUpdateUpgrade(
@@ -223,6 +226,9 @@ public static class TwoScenePrototypeBuilder
         chaser.moveSpeed = enemyData.moveSpeed;
         chaser.contactDamage = enemyData.contactDamage;
         chaser.damageInterval = enemyData.damageInterval;
+        chaser.attackRange = enemyData.attackRange;
+        chaser.attackWindup = enemyData.attackWindup;
+        chaser.attackRecovery = enemyData.attackRecovery;
 
         PrefabUtility.SaveAsPrefabAsset(root, path);
         PrefabUtility.UnloadPrefabContents(root);
@@ -265,6 +271,9 @@ public static class TwoScenePrototypeBuilder
         float moveSpeed,
         int contactDamage,
         float damageInterval,
+        float attackRange,
+        float attackWindup,
+        float attackRecovery,
         Vector3 scale,
         Color color,
         DropTableData dropTable)
@@ -282,6 +291,9 @@ public static class TwoScenePrototypeBuilder
         data.moveSpeed = moveSpeed;
         data.contactDamage = contactDamage;
         data.damageInterval = damageInterval;
+        data.attackRange = attackRange;
+        data.attackWindup = attackWindup;
+        data.attackRecovery = attackRecovery;
         data.scale = scale;
         data.prototypeColor = color;
         data.dropTable = dropTable;
