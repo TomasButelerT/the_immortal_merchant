@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 [RequireComponent(typeof(Collider2D), typeof(SpriteRenderer))]
@@ -40,5 +41,11 @@ public class PrototypeChest : MonoBehaviour
 
         opened = true;
         GetComponent<SpriteRenderer>().color = new Color(0.3f, 0.3f, 0.3f);
+        TMP_Text label = GetComponentInChildren<TMP_Text>();
+        if (label != null)
+        {
+            label.text = "OPENED";
+            label.color = Color.gray;
+        }
     }
 }

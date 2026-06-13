@@ -368,6 +368,8 @@ public static class TwoScenePrototypeBuilder
 
         DungeonDoor combatDoor = CreateDoor(sprite, "CombatRouteDoor", new Vector2(11f, 4f), new Vector2(3f, 0.6f));
         DungeonDoor rewardDoor = CreateDoor(sprite, "RewardRouteDoor", new Vector2(11f, -4f), new Vector2(3f, 0.6f));
+        CreateWorldLabel("CombatRouteSign", "COMBAT ROUTE\nHigh risk / More enemies", new Vector2(11f, 5.8f), new Color(1f, 0.35f, 0.25f), 4f);
+        CreateWorldLabel("RewardRouteSign", "SAFE ROUTE\nHeal + Chest", new Vector2(11f, -5.8f), new Color(0.3f, 1f, 0.55f), 4f);
 
         DungeonManager dungeonManager = new GameObject("DungeonManager").AddComponent<DungeonManager>();
         dungeonManager.earlyExitPortal = CreateExitPortal(sprite, "EarlyExitPortal", new Vector2(6f, -3.5f));
@@ -461,6 +463,7 @@ public static class TwoScenePrototypeBuilder
         CircleCollider2D collider = portalObject.AddComponent<CircleCollider2D>();
         collider.isTrigger = true;
         collider.radius = 0.55f;
+        CreateWorldLabel(objectName + "Label", "EXIT LOCKED", position + Vector2.up * 1.1f, new Color(1f, 0.35f, 0.35f), 3.5f, portalObject.transform);
         return portalObject.AddComponent<DungeonExitPortal>();
     }
 
@@ -518,6 +521,7 @@ public static class TwoScenePrototypeBuilder
     private static DungeonDoor CreateDoor(Sprite sprite, string name, Vector2 position, Vector2 scale)
     {
         GameObject doorObject = CreateBlock(sprite, name, position, scale, new Color(0.65f, 0.2f, 0.1f), 4, true, null);
+        CreateWorldLabel(name + "Label", "DOOR LOCKED", position + Vector2.up * 0.8f, new Color(1f, 0.45f, 0.25f), 3f, doorObject.transform);
         return doorObject.AddComponent<DungeonDoor>();
     }
 
@@ -615,6 +619,7 @@ public static class TwoScenePrototypeBuilder
         prototypeChest.rewardTable = rewards;
         prototypeChest.rewardItems = null;
         prototypeChest.amount = 1;
+        CreateWorldLabel("ChestLabel", "CHEST", position + Vector2.up * 0.75f, new Color(1f, 0.8f, 0.2f), 3.5f, chest.transform);
     }
 
     private static void CreateHealingPickup(Sprite sprite, Vector2 position)
@@ -623,6 +628,32 @@ public static class TwoScenePrototypeBuilder
         CircleCollider2D collider = healing.AddComponent<CircleCollider2D>();
         collider.isTrigger = true;
         healing.AddComponent<HealingPickup>().healAmount = 25;
+        CreateWorldLabel("HealingLabel", "HEAL +25", position + Vector2.up * 0.65f, new Color(0.3f, 1f, 0.45f), 3.5f, healing.transform);
+    }
+
+    private static TextMeshPro CreateWorldLabel(
+        string name,
+        string value,
+        Vector2 position,
+        Color color,
+        float fontSize,
+        Transform parent = null)
+    {
+        GameObject labelObject = new GameObject(name);
+        labelObject.transform.position = position;
+        if (parent != null)
+        {
+            labelObject.transform.SetParent(parent, true);
+        }
+
+        TextMeshPro label = labelObject.AddComponent<TextMeshPro>();
+        label.text = value;
+        label.fontSize = fontSize;
+        label.color = color;
+        label.alignment = TextAlignmentOptions.Center;
+        label.sortingOrder = 30;
+        label.rectTransform.sizeDelta = new Vector2(6f, 2f);
+        return label;
     }
 
     private static void CreateShopInterface(ShopManager shop, SceneNavigation navigation)
