@@ -9,6 +9,7 @@ public class RoomEncounter : MonoBehaviour
     public List<EnemyHealth> enemies = new List<EnemyHealth>();
     public List<DungeonDoor> doors = new List<DungeonDoor>();
     public DungeonManager dungeonManager;
+    public DungeonExitPortal completionPortal;
 
     private bool hasStarted;
 
@@ -45,7 +46,13 @@ public class RoomEncounter : MonoBehaviour
         }
 
         SetDoorsLocked(true);
-        dungeonManager.RoomStarted(roomNumber, CountLivingEnemies());
+        int livingEnemies = CountLivingEnemies();
+        dungeonManager.RoomStarted(roomNumber, livingEnemies);
+
+        if (livingEnemies == 0)
+        {
+            CompleteRoom();
+        }
     }
 
     public void EnemyDefeated(EnemyHealth defeatedEnemy)
@@ -56,8 +63,18 @@ public class RoomEncounter : MonoBehaviour
 
         if (livingEnemies == 0)
         {
-            SetDoorsLocked(false);
-            dungeonManager.RoomCleared(roomNumber, isFinalRoom);
+            CompleteRoom();
+        }
+    }
+
+    private void CompleteRoom()
+    {
+        SetDoorsLocked(false);
+        dungeonManager.RoomCleared(roomNumber, isFinalRoom);
+
+        if (completionPortal != null)
+        {
+            completionPortal.SetUnlocked(true);
         }
     }
 

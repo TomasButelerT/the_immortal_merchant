@@ -232,14 +232,18 @@ public static class TwoScenePrototypeBuilder
         cameraFollow.target = player.transform;
 
         CreateRoomGeometry(sprite, "Room1Geometry", Vector2.zero, new Color(0.12f, 0.18f, 0.22f), true, false);
-        CreateRoomGeometry(sprite, "Room2Geometry", new Vector2(18f, 0f), new Color(0.18f, 0.12f, 0.24f), false, true);
-        CreateCorridor(sprite);
+        CreateRoomGeometry(sprite, "CombatRoomGeometry", new Vector2(18f, 7f), new Color(0.24f, 0.11f, 0.12f), false, true);
+        CreateRoomGeometry(sprite, "RewardRoomGeometry", new Vector2(18f, -7f), new Color(0.10f, 0.24f, 0.17f), false, true);
+        CreateBranchingCorridors(sprite);
 
-        DungeonDoor sharedDoor = CreateDoor(sprite, new Vector2(9f, 0f));
+        DungeonDoor combatDoor = CreateDoor(sprite, "CombatRouteDoor", new Vector2(11f, 4f), new Vector2(3f, 0.6f));
+        DungeonDoor rewardDoor = CreateDoor(sprite, "RewardRouteDoor", new Vector2(11f, -4f), new Vector2(3f, 0.6f));
 
         DungeonManager dungeonManager = new GameObject("DungeonManager").AddComponent<DungeonManager>();
-        dungeonManager.earlyExitPortal = CreateExitPortal(sprite, "EarlyExitPortal", new Vector2(6.5f, -3.4f));
-        dungeonManager.exitPortal = CreateExitPortal(sprite, "FinalExitPortal", new Vector2(18f, 3.4f));
+        dungeonManager.earlyExitPortal = CreateExitPortal(sprite, "EarlyExitPortal", new Vector2(6f, -3.5f));
+        DungeonExitPortal combatExit = CreateExitPortal(sprite, "CombatExitPortal", new Vector2(21.5f, 10f));
+        DungeonExitPortal rewardExit = CreateExitPortal(sprite, "RewardExitPortal", new Vector2(21.5f, -10f));
+        dungeonManager.exitPortal = combatExit;
 
         RoomEncounter room1 = CreateRoomEncounter(
             scene,
@@ -248,25 +252,34 @@ public static class TwoScenePrototypeBuilder
             true,
             false,
             dungeonManager,
-            sharedDoor,
+            new[] { combatDoor, rewardDoor },
             new[] { normalEnemyPrefab, fastEnemyPrefab },
             new[] { new Vector3(2.5f, 1.5f, 0f), new Vector3(3f, -2f, 0f) });
 
-        RoomEncounter room2 = CreateRoomEncounter(
+        RoomEncounter combatRoom = CreateRoomEncounter(
             scene,
-            "Room2Encounter",
+            "CombatRouteEncounter",
             2,
             false,
             true,
             dungeonManager,
-            sharedDoor,
+            new[] { combatDoor },
             new[] { tankEnemyPrefab, normalEnemyPrefab, normalEnemyPrefab },
-            new[] { new Vector3(18f, 1.5f, 0f), new Vector3(15.5f, -1.8f, 0f), new Vector3(20.5f, -1.5f, 0f) });
+            new[] { new Vector3(18f, 8.5f, 0f), new Vector3(15.5f, 5.2f, 0f), new Vector3(20.5f, 5.5f, 0f) });
+        combatRoom.completionPortal = combatExit;
 
-        CreateRoomTrigger(room2, new Vector2(11f, 0f));
-        CreatePrototypeChest(sprite, chestReward, new Vector2(21.5f, 3f));
-        CreateHealingPickup(sprite, new Vector2(15f, 3f));
+        RouteChoiceController routeChoice = new GameObject("RouteChoiceController").AddComponent<RouteChoiceController>();
+        routeChoice.combatRouteDoor = combatDoor;
+        routeChoice.rewardRouteDoor = rewardDoor;
+        routeChoice.combatEncounter = combatRoom;
+        routeChoice.rewardExitPortal = rewardExit;
+
+        CreateRouteChoiceTrigger(routeChoice, true, new Vector2(11f, 5f));
+        CreateRouteChoiceTrigger(routeChoice, false, new Vector2(11f, -5f));
+        CreatePrototypeChest(sprite, chestReward, new Vector2(19.5f, -7f));
+        CreateHealingPickup(sprite, new Vector2(16.5f, -7f));
         CreateDungeonInterface(player.GetComponent<PlayerHealth>(), dungeonManager);
+        routeChoice.statusText = dungeonManager.enemiesRemainingText;
 
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene, DungeonScenePath);
@@ -360,16 +373,21 @@ public static class TwoScenePrototypeBuilder
         CreateBlock(sprite, name + "Bottom", center + Vector2.down * 3.5f, new Vector2(0.5f, 4f), Color.black, 2, true, parent);
     }
 
-    private static void CreateCorridor(Sprite sprite)
+    private static void CreateBranchingCorridors(Sprite sprite)
     {
-        CreateBlock(sprite, "RoomCorridor", new Vector2(9f, 0f), new Vector2(4f, 3f), new Color(0.15f, 0.15f, 0.18f), -9, false, null);
-        CreateBlock(sprite, "CorridorNorthWall", new Vector2(9f, 1.75f), new Vector2(4f, 0.5f), Color.black, 2, true, null);
-        CreateBlock(sprite, "CorridorSouthWall", new Vector2(9f, -1.75f), new Vector2(4f, 0.5f), Color.black, 2, true, null);
+        Color corridorColor = new Color(0.15f, 0.15f, 0.18f);
+        CreateBlock(sprite, "MainCorridor", new Vector2(9f, 0f), new Vector2(4f, 3f), corridorColor, -9, false, null);
+        CreateBlock(sprite, "BranchJunction", new Vector2(11f, 0f), new Vector2(3f, 11f), corridorColor, -9, false, null);
+        CreateBlock(sprite, "CombatCorridor", new Vector2(14.5f, 7f), new Vector2(7f, 3f), corridorColor, -9, false, null);
+        CreateBlock(sprite, "RewardCorridor", new Vector2(14.5f, -7f), new Vector2(7f, 3f), corridorColor, -9, false, null);
+
+        CreateBlock(sprite, "JunctionWestWallTop", new Vector2(9f, 4f), new Vector2(0.5f, 5f), Color.black, 2, true, null);
+        CreateBlock(sprite, "JunctionWestWallBottom", new Vector2(9f, -4f), new Vector2(0.5f, 5f), Color.black, 2, true, null);
     }
 
-    private static DungeonDoor CreateDoor(Sprite sprite, Vector2 position)
+    private static DungeonDoor CreateDoor(Sprite sprite, string name, Vector2 position, Vector2 scale)
     {
-        GameObject doorObject = CreateBlock(sprite, "SharedRoomDoor", position, new Vector2(0.6f, 3f), new Color(0.65f, 0.2f, 0.1f), 4, true, null);
+        GameObject doorObject = CreateBlock(sprite, name, position, scale, new Color(0.65f, 0.2f, 0.1f), 4, true, null);
         return doorObject.AddComponent<DungeonDoor>();
     }
 
@@ -411,7 +429,7 @@ public static class TwoScenePrototypeBuilder
         bool startsActive,
         bool isFinalRoom,
         DungeonManager dungeonManager,
-        DungeonDoor sharedDoor,
+        DungeonDoor[] roomDoors,
         GameObject[] enemyPrefabs,
         Vector3[] enemyPositions)
     {
@@ -421,7 +439,7 @@ public static class TwoScenePrototypeBuilder
         encounter.startsActive = startsActive;
         encounter.isFinalRoom = isFinalRoom;
         encounter.dungeonManager = dungeonManager;
-        encounter.doors.Add(sharedDoor);
+        encounter.doors.AddRange(roomDoors);
 
         for (int i = 0; i < enemyPrefabs.Length; i++)
         {
@@ -443,6 +461,19 @@ public static class TwoScenePrototypeBuilder
         collider.size = new Vector2(1f, 3f);
         RoomTrigger trigger = triggerObject.AddComponent<RoomTrigger>();
         trigger.roomEncounter = encounter;
+    }
+
+    private static void CreateRouteChoiceTrigger(RouteChoiceController controller, bool combatRoute, Vector2 position)
+    {
+        GameObject triggerObject = new GameObject(combatRoute ? "CombatRouteTrigger" : "RewardRouteTrigger");
+        triggerObject.transform.position = position;
+        BoxCollider2D collider = triggerObject.AddComponent<BoxCollider2D>();
+        collider.isTrigger = true;
+        collider.size = new Vector2(3f, 1f);
+
+        RouteChoiceTrigger trigger = triggerObject.AddComponent<RouteChoiceTrigger>();
+        trigger.routeChoice = controller;
+        trigger.choosesCombatRoute = combatRoute;
     }
 
     private static void CreatePrototypeChest(Sprite sprite, ItemData reward, Vector2 position)
