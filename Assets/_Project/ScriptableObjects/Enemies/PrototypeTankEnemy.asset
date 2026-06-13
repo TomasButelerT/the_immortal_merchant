@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94aa7c5876e877f47ac90dd4b5099de8, type: 3}
+  m_Name: PrototypeTankEnemy
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  enemyId: prototype_tank
+  displayName: Prototype Tank Enemy
+  maxHealth: 60
+  moveSpeed: 1.2
+  contactDamage: 15
+  damageInterval: 1.2
+  scale: {x: 1.3, y: 1.3, z: 1}
+  prototypeColor: {r: 0.55, g: 0.2, b: 0.8, a: 1}
+  dropTable: {fileID: 11400000, guid: f0ef4b63a2a0ebc4a9c87a567c5fac19, type: 2}

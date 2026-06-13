@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyChaser : MonoBehaviour
 {
+    public EnemyData enemyData;
     public float moveSpeed = 2f;
     public int contactDamage = 10;
     public float damageInterval = 1f;
@@ -16,6 +17,13 @@ public class EnemyChaser : MonoBehaviour
     private void Awake()
     {
         body = GetComponent<Rigidbody2D>();
+
+        if (enemyData != null)
+        {
+            moveSpeed = enemyData.moveSpeed;
+            contactDamage = enemyData.contactDamage;
+            damageInterval = enemyData.damageInterval;
+        }
     }
 
     private void Start()

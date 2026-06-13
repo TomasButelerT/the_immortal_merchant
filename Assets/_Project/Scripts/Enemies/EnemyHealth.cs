@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
+    public EnemyData enemyData;
     public int maxHealth = 30;
     public int currentHealth;
     public GameObject itemDropPrefab;
@@ -15,6 +16,11 @@ public class EnemyHealth : MonoBehaviour
 
     private void Awake()
     {
+        if (enemyData != null)
+        {
+            maxHealth = enemyData.maxHealth;
+        }
+
         currentHealth = maxHealth;
         enemyRenderer = GetComponent<SpriteRenderer>();
 
@@ -72,9 +78,13 @@ public class EnemyHealth : MonoBehaviour
             roomEncounter.EnemyDefeated(this);
         }
 
-        if (itemDropPrefab != null && Random.value <= itemDropChance)
+        GameObject dropPrefab = enemyData != null && enemyData.dropTable != null
+            ? enemyData.dropTable.RollDrop()
+            : (itemDropPrefab != null && Random.value <= itemDropChance ? itemDropPrefab : null);
+
+        if (dropPrefab != null)
         {
-            Instantiate(itemDropPrefab, transform.position, Quaternion.identity);
+            Instantiate(dropPrefab, transform.position, Quaternion.identity);
         }
 
         Destroy(gameObject);

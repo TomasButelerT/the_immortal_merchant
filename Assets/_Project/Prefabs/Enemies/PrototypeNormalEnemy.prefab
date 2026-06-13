@@ -180,10 +180,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b70120dff36f24b48b2a1d7100ce7f3e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
+  enemyData: {fileID: 11400000, guid: a0f5efd9cdee1b446a4eec1589d004c8, type: 2}
   maxHealth: 30
   currentHealth: 0
-  itemDropPrefab: {fileID: 4235887308348283285, guid: 67553efe88dc606459820ef3b4a2084c, type: 3}
-  itemDropChance: 0.2
+  itemDropPrefab: {fileID: 0}
+  itemDropChance: 1
 --- !u!114 &7612916604761278256
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -196,6 +197,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa792e6eca32055449272fa0f982f705, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChaser
+  enemyData: {fileID: 11400000, guid: a0f5efd9cdee1b446a4eec1589d004c8, type: 2}
   moveSpeed: 2
   contactDamage: 10
   damageInterval: 1

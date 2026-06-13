@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7ebff1ae6dd18b45b20fca8d31d1e87, type: 3}
+  m_Name: PrototypeFastDrops
+  m_EditorClassIdentifier: Assembly-CSharp::DropTableData
+  dropChance: 0.1
+  entries:
+  - pickupPrefab: {fileID: 4702019296393692232, guid: bda3c3228cc880247bfcf754ba09c8a4, type: 3}
+    weight: 1

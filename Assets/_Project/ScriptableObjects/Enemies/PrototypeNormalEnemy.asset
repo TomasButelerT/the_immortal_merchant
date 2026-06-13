@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94aa7c5876e877f47ac90dd4b5099de8, type: 3}
+  m_Name: PrototypeNormalEnemy
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyData
+  enemyId: prototype_normal
+  displayName: Prototype Normal Enemy
+  maxHealth: 30
+  moveSpeed: 2
+  contactDamage: 10
+  damageInterval: 1
+  scale: {x: 1, y: 1, z: 1}
+  prototypeColor: {r: 0.9, g: 0.18, b: 0.18, a: 1}
+  dropTable: {fileID: 11400000, guid: 0c34ec27e7fa8224e80757ad9ee2300e, type: 2}

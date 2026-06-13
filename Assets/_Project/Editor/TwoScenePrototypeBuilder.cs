@@ -81,15 +81,38 @@ public static class TwoScenePrototypeBuilder
             tankItem,
             new Color(0.72f, 0.35f, 1f));
 
+        DropTableData normalDrops = CreateOrUpdateDropTable(
+            "Assets/_Project/ScriptableObjects/Items/PrototypeNormalDrops.asset", 0.2f,
+            new[] { normalPickup }, new[] { 1f });
+        DropTableData fastDrops = CreateOrUpdateDropTable(
+            "Assets/_Project/ScriptableObjects/Items/PrototypeFastDrops.asset", 0.1f,
+            new[] { fastPickup }, new[] { 1f });
+        DropTableData tankDrops = CreateOrUpdateDropTable(
+            "Assets/_Project/ScriptableObjects/Items/PrototypeTankDrops.asset", 0.35f,
+            new[] { tankPickup }, new[] { 1f });
+        DropTableData chestDrops = CreateOrUpdateDropTable(
+            "Assets/_Project/ScriptableObjects/Items/PrototypeChestDrops.asset", 1f,
+            new[] { normalPickup, fastPickup, tankPickup }, new[] { 60f, 30f, 10f });
+
+        EnemyData normalData = CreateOrUpdateEnemyData(
+            "Assets/_Project/ScriptableObjects/Enemies/PrototypeNormalEnemy.asset",
+            "prototype_normal", "Prototype Normal Enemy", 30, 2f, 10, 1f,
+            Vector3.one, new Color(0.9f, 0.18f, 0.18f), normalDrops);
+        EnemyData fastData = CreateOrUpdateEnemyData(
+            "Assets/_Project/ScriptableObjects/Enemies/PrototypeFastEnemy.asset",
+            "prototype_fast", "Prototype Fast Enemy", 20, 3.5f, 7, 0.7f,
+            new Vector3(0.75f, 0.75f, 1f), new Color(1f, 0.45f, 0.12f), fastDrops);
+        EnemyData tankData = CreateOrUpdateEnemyData(
+            "Assets/_Project/ScriptableObjects/Enemies/PrototypeTankEnemy.asset",
+            "prototype_tank", "Prototype Tank Enemy", 60, 1.2f, 15, 1.2f,
+            new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f), tankDrops);
+
         GameObject normalEnemy = CreateEnemyVariant(
-            baseEnemyPrefab, NormalEnemyPath, "PrototypeNormalEnemy", normalPickup,
-            0.2f, 30, 2f, 10, 1f, Vector3.one, new Color(0.9f, 0.18f, 0.18f));
+            baseEnemyPrefab, NormalEnemyPath, "PrototypeNormalEnemy", normalData);
         GameObject fastEnemy = CreateEnemyVariant(
-            baseEnemyPrefab, FastEnemyPath, "PrototypeFastEnemy", fastPickup,
-            0.1f, 20, 3.5f, 7, 0.7f, new Vector3(0.75f, 0.75f, 1f), new Color(1f, 0.45f, 0.12f));
+            baseEnemyPrefab, FastEnemyPath, "PrototypeFastEnemy", fastData);
         GameObject tankEnemy = CreateEnemyVariant(
-            baseEnemyPrefab, TankEnemyPath, "PrototypeTankEnemy", tankPickup,
-            0.35f, 60, 1.2f, 15, 1.2f, new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f));
+            baseEnemyPrefab, TankEnemyPath, "PrototypeTankEnemy", tankData);
 
         BuildShopScene(sprite);
         BuildDungeonScene(
@@ -98,7 +121,7 @@ public static class TwoScenePrototypeBuilder
             normalEnemy,
             fastEnemy,
             tankEnemy,
-            new[] { normalItem, fastItem, tankItem });
+            chestDrops);
         ConfigureBuildSettings();
 
         AssetDatabase.SaveAssets();
@@ -173,33 +196,87 @@ public static class TwoScenePrototypeBuilder
         GameObject basePrefab,
         string path,
         string objectName,
-        GameObject dropPrefab,
+        EnemyData enemyData)
+    {
+        GameObject root = PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(basePrefab));
+        root.name = objectName;
+        root.transform.localScale = enemyData.scale;
+        root.GetComponent<SpriteRenderer>().color = enemyData.prototypeColor;
+
+        EnemyHealth health = root.GetComponent<EnemyHealth>();
+        health.enemyData = enemyData;
+        health.maxHealth = enemyData.maxHealth;
+        health.itemDropPrefab = null;
+
+        EnemyChaser chaser = root.GetComponent<EnemyChaser>();
+        chaser.enemyData = enemyData;
+        chaser.moveSpeed = enemyData.moveSpeed;
+        chaser.contactDamage = enemyData.contactDamage;
+        chaser.damageInterval = enemyData.damageInterval;
+
+        PrefabUtility.SaveAsPrefabAsset(root, path);
+        PrefabUtility.UnloadPrefabContents(root);
+        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+    }
+
+    private static DropTableData CreateOrUpdateDropTable(
+        string path,
         float dropChance,
+        GameObject[] pickupPrefabs,
+        float[] weights)
+    {
+        DropTableData table = AssetDatabase.LoadAssetAtPath<DropTableData>(path);
+        if (table == null)
+        {
+            table = ScriptableObject.CreateInstance<DropTableData>();
+            AssetDatabase.CreateAsset(table, path);
+        }
+
+        table.dropChance = dropChance;
+        table.entries = new DropTableEntry[pickupPrefabs.Length];
+        for (int i = 0; i < pickupPrefabs.Length; i++)
+        {
+            table.entries[i] = new DropTableEntry
+            {
+                pickupPrefab = pickupPrefabs[i],
+                weight = weights[i]
+            };
+        }
+
+        EditorUtility.SetDirty(table);
+        return table;
+    }
+
+    private static EnemyData CreateOrUpdateEnemyData(
+        string path,
+        string enemyId,
+        string displayName,
         int maxHealth,
         float moveSpeed,
         int contactDamage,
         float damageInterval,
         Vector3 scale,
-        Color color)
+        Color color,
+        DropTableData dropTable)
     {
-        GameObject root = PrefabUtility.LoadPrefabContents(AssetDatabase.GetAssetPath(basePrefab));
-        root.name = objectName;
-        root.transform.localScale = scale;
-        root.GetComponent<SpriteRenderer>().color = color;
+        EnemyData data = AssetDatabase.LoadAssetAtPath<EnemyData>(path);
+        if (data == null)
+        {
+            data = ScriptableObject.CreateInstance<EnemyData>();
+            AssetDatabase.CreateAsset(data, path);
+        }
 
-        EnemyHealth health = root.GetComponent<EnemyHealth>();
-        health.maxHealth = maxHealth;
-        health.itemDropPrefab = dropPrefab;
-        health.itemDropChance = dropChance;
-
-        EnemyChaser chaser = root.GetComponent<EnemyChaser>();
-        chaser.moveSpeed = moveSpeed;
-        chaser.contactDamage = contactDamage;
-        chaser.damageInterval = damageInterval;
-
-        PrefabUtility.SaveAsPrefabAsset(root, path);
-        PrefabUtility.UnloadPrefabContents(root);
-        return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        data.enemyId = enemyId;
+        data.displayName = displayName;
+        data.maxHealth = maxHealth;
+        data.moveSpeed = moveSpeed;
+        data.contactDamage = contactDamage;
+        data.damageInterval = damageInterval;
+        data.scale = scale;
+        data.prototypeColor = color;
+        data.dropTable = dropTable;
+        EditorUtility.SetDirty(data);
+        return data;
     }
 
     private static void BuildShopScene(Sprite sprite)
@@ -228,7 +305,7 @@ public static class TwoScenePrototypeBuilder
         GameObject normalEnemyPrefab,
         GameObject fastEnemyPrefab,
         GameObject tankEnemyPrefab,
-        ItemData[] chestRewards)
+        DropTableData chestRewards)
     {
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         CreatePersistentSystems();
@@ -485,13 +562,14 @@ public static class TwoScenePrototypeBuilder
         trigger.choosesCombatRoute = combatRoute;
     }
 
-    private static void CreatePrototypeChest(Sprite sprite, ItemData[] rewards, Vector2 position)
+    private static void CreatePrototypeChest(Sprite sprite, DropTableData rewards, Vector2 position)
     {
         GameObject chest = CreateBlock(sprite, "PrototypeChest", position, new Vector2(0.9f, 0.7f), new Color(0.9f, 0.6f, 0.12f), 4, false, null);
         BoxCollider2D collider = chest.AddComponent<BoxCollider2D>();
         collider.isTrigger = true;
         PrototypeChest prototypeChest = chest.AddComponent<PrototypeChest>();
-        prototypeChest.rewardItems = rewards;
+        prototypeChest.rewardTable = rewards;
+        prototypeChest.rewardItems = null;
         prototypeChest.amount = 1;
     }
 
