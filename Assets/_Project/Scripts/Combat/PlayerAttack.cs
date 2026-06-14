@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,6 +19,9 @@ public class PlayerAttack : MonoBehaviour
     public float finisherDamageMultiplier = 1.8f;
     public float finisherRadiusMultiplier = 1.2f;
     public float finisherKnockbackMultiplier = 1.6f;
+    public float attackLungeSpeed = 2.8f;
+    public float attackLungeDuration = 0.07f;
+    public float finisherLungeMultiplier = 1.5f;
     public LayerMask enemyLayers;
 
     private float nextAttackTime;
@@ -108,17 +112,32 @@ public class PlayerAttack : MonoBehaviour
             playerController.SetMovementLocked(true);
         }
 
+        if (playerController != null)
+        {
+            float lungeSpeed = isFinisher ? attackLungeSpeed * finisherLungeMultiplier : attackLungeSpeed;
+            playerController.ApplyAttackLunge(playerController.FacingDirection, lungeSpeed, attackLungeDuration);
+        }
+
         yield return StartCoroutine(AttackFlash(step, currentRadius));
         Collider2D[] hits = Physics2D.OverlapCircleAll(attackPoint.position, currentRadius, enemyLayers);
+        HashSet<EnemyHealth> damagedEnemies = new HashSet<EnemyHealth>();
 
         foreach (Collider2D hit in hits)
         {
             EnemyHealth enemyHealth = hit.GetComponentInParent<EnemyHealth>();
-            if (enemyHealth != null)
+            if (enemyHealth != null && damagedEnemies.Add(enemyHealth))
             {
                 Vector2 knockbackDirection = enemyHealth.transform.position - transform.position;
                 enemyHealth.TakeDamage(currentDamage, knockbackDirection, currentKnockback, knockbackDuration);
             }
+        }
+
+        if (damagedEnemies.Count > 0)
+        {
+            CombatFeedback.PlayHit(
+                isFinisher ? 0.065f : 0.035f,
+                isFinisher ? 0.16f : 0.1f,
+                isFinisher ? 0.22f : 0.1f);
         }
 
         yield return new WaitForSeconds(recovery);
@@ -168,6 +187,11 @@ public class PlayerAttack : MonoBehaviour
         activeComboStep = 0;
         attackQueued = false;
         HideAttackArea();
+
+        if (playerController != null)
+        {
+            playerController.CancelAttackLunge();
+        }
 
         if (playerRenderer != null)
         {

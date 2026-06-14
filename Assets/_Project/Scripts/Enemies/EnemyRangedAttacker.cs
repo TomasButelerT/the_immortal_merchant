@@ -140,4 +140,17 @@ public class EnemyRangedAttacker : MonoBehaviour
             Destroy(aimMaterial);
         }
     }
+
+    private void OnDisable()
+    {
+        StopAllCoroutines();
+        isAttacking = false;
+        isKnockedBack = false;
+        SetAimVisible(false);
+
+        if (body != null)
+        {
+            body.linearVelocity = Vector2.zero;
+        }
+    }
 }

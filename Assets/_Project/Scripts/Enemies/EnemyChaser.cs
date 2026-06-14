@@ -85,6 +85,7 @@ public class EnemyChaser : MonoBehaviour
                 attackRoutine = null;
                 isAttacking = false;
                 SetTelegraphVisible(false);
+                SetTelegraphRadius(attackRange);
             }
 
             StartCoroutine(KnockbackRoutine(direction.normalized, force, duration));
@@ -96,11 +97,28 @@ public class EnemyChaser : MonoBehaviour
         isAttacking = true;
         body.linearVelocity = Vector2.zero;
         SetTelegraphVisible(true);
-        SetTelegraphColor(new Color(1f, 0.65f, 0.1f, 0.9f));
+        float windupElapsed = 0f;
 
-        yield return new WaitForSeconds(attackWindup);
+        while (windupElapsed < attackWindup)
+        {
+            windupElapsed += Time.deltaTime;
+            float progress = attackWindup > 0f ? Mathf.Clamp01(windupElapsed / attackWindup) : 1f;
+            SetTelegraphColor(Color.Lerp(
+                new Color(1f, 0.65f, 0.1f, 0.9f),
+                new Color(1f, 0.1f, 0.1f, 1f),
+                progress));
+            SetTelegraphRadius(Mathf.Lerp(attackRange, attackRange * 0.65f, progress));
+            yield return null;
+        }
 
-        SetTelegraphColor(new Color(1f, 0.1f, 0.1f, 1f));
+        Vector2 attackDirection = player != null
+            ? ((Vector2)player.position - body.position).normalized
+            : Vector2.zero;
+        float lungeSpeed = Mathf.Max(2.5f, moveSpeed * 2f);
+        body.linearVelocity = attackDirection * lungeSpeed;
+        yield return new WaitForSeconds(0.08f);
+        body.linearVelocity = Vector2.zero;
+
         if (player != null && Vector2.Distance(transform.position, player.position) <= attackRange)
         {
             PlayerHealth playerHealth = player.GetComponent<PlayerHealth>();
@@ -112,6 +130,7 @@ public class EnemyChaser : MonoBehaviour
 
         yield return new WaitForSeconds(0.1f);
         SetTelegraphVisible(false);
+        SetTelegraphRadius(attackRange);
         yield return new WaitForSeconds(attackRecovery);
 
         nextAttackTime = Time.time + damageInterval;
@@ -173,11 +192,40 @@ public class EnemyChaser : MonoBehaviour
         }
     }
 
+    private void SetTelegraphRadius(float radius)
+    {
+        if (attackTelegraph == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < attackTelegraph.positionCount; i++)
+        {
+            float angle = i * Mathf.PI * 2f / attackTelegraph.positionCount;
+            attackTelegraph.SetPosition(i, new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0f) * radius);
+        }
+    }
+
     private void OnDestroy()
     {
         if (telegraphMaterial != null)
         {
             Destroy(telegraphMaterial);
+        }
+    }
+
+    private void OnDisable()
+    {
+        StopAllCoroutines();
+        attackRoutine = null;
+        isAttacking = false;
+        isKnockedBack = false;
+        SetTelegraphVisible(false);
+        SetTelegraphRadius(attackRange);
+
+        if (body != null)
+        {
+            body.linearVelocity = Vector2.zero;
         }
     }
 }

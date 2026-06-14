@@ -15,8 +15,10 @@ public class PlayerController2D : MonoBehaviour
     private Vector2 lastMoveDirection = Vector2.down;
     private bool isDashing;
     private bool isKnockedBack;
+    private bool isAttackLunging;
     private bool movementLocked;
     private float nextDashTime;
+    private Coroutine attackLungeRoutine;
 
     public Vector2 FacingDirection => lastMoveDirection;
 
@@ -68,7 +70,7 @@ public class PlayerController2D : MonoBehaviour
     // Applies top-down movement through the Rigidbody2D.
     private void Move()
     {
-        if (!isDashing && !isKnockedBack && !movementLocked)
+        if (!isDashing && !isKnockedBack && !isAttackLunging && !movementLocked)
         {
             body.linearVelocity = moveInput * moveSpeed;
         }
@@ -89,6 +91,23 @@ public class PlayerController2D : MonoBehaviour
         {
             StartCoroutine(KnockbackRoutine(direction.normalized, force, duration));
         }
+    }
+
+    public void ApplyAttackLunge(Vector2 direction, float speed, float duration)
+    {
+        CancelAttackLunge();
+        attackLungeRoutine = StartCoroutine(AttackLungeRoutine(direction.normalized, speed, duration));
+    }
+
+    public void CancelAttackLunge()
+    {
+        if (attackLungeRoutine != null)
+        {
+            StopCoroutine(attackLungeRoutine);
+            attackLungeRoutine = null;
+        }
+
+        isAttackLunging = false;
     }
 
     public void Dash()
@@ -116,6 +135,16 @@ public class PlayerController2D : MonoBehaviour
         yield return new WaitForSeconds(dashDuration);
 
         isDashing = false;
+    }
+
+    private IEnumerator AttackLungeRoutine(Vector2 direction, float speed, float duration)
+    {
+        isAttackLunging = true;
+        body.linearVelocity = direction * speed;
+        yield return new WaitForSeconds(duration);
+        body.linearVelocity = Vector2.zero;
+        isAttackLunging = false;
+        attackLungeRoutine = null;
     }
 
     private IEnumerator KnockbackRoutine(Vector2 direction, float force, float duration)

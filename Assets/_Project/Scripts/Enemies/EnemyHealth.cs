@@ -13,6 +13,7 @@ public class EnemyHealth : MonoBehaviour
     private Color normalColor;
     private Coroutine hitFlashRoutine;
     private EnemyHealthBar healthBar;
+    private bool isDying;
 
     private void Awake()
     {
@@ -43,7 +44,7 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(int amount, Vector2 knockbackDirection, float knockbackForce, float knockbackDuration)
     {
-        if (amount <= 0 || currentHealth <= 0)
+        if (amount <= 0 || currentHealth <= 0 || isDying)
         {
             return;
         }
@@ -78,6 +79,12 @@ public class EnemyHealth : MonoBehaviour
 
     public void Die()
     {
+        if (isDying)
+        {
+            return;
+        }
+
+        isDying = true;
         RoomEncounter roomEncounter = GetComponentInParent<RoomEncounter>();
         if (roomEncounter != null)
         {
@@ -91,6 +98,59 @@ public class EnemyHealth : MonoBehaviour
         if (dropPrefab != null)
         {
             Instantiate(dropPrefab, transform.position, Quaternion.identity);
+        }
+
+        DisableEnemyBehaviour();
+        StartCoroutine(DeathRoutine());
+    }
+
+    private void DisableEnemyBehaviour()
+    {
+        foreach (Collider2D enemyCollider in GetComponentsInChildren<Collider2D>())
+        {
+            enemyCollider.enabled = false;
+        }
+
+        EnemyChaser chaser = GetComponent<EnemyChaser>();
+        if (chaser != null)
+        {
+            chaser.enabled = false;
+        }
+
+        EnemyRangedAttacker rangedAttacker = GetComponent<EnemyRangedAttacker>();
+        if (rangedAttacker != null)
+        {
+            rangedAttacker.enabled = false;
+        }
+
+        Rigidbody2D body = GetComponent<Rigidbody2D>();
+        if (body != null)
+        {
+            body.linearVelocity = Vector2.zero;
+            body.simulated = false;
+        }
+    }
+
+    private IEnumerator DeathRoutine()
+    {
+        const float duration = 0.22f;
+        Vector3 startScale = transform.localScale;
+        Color startColor = enemyRenderer != null ? normalColor : Color.white;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float progress = Mathf.Clamp01(elapsed / duration);
+            transform.localScale = Vector3.Lerp(startScale, startScale * 0.15f, progress);
+            transform.Rotate(0f, 0f, 540f * Time.unscaledDeltaTime);
+
+            if (enemyRenderer != null)
+            {
+                enemyRenderer.color = new Color(startColor.r, startColor.g, startColor.b, 1f - progress);
+            }
+
+            yield return null;
         }
 
         Destroy(gameObject);
