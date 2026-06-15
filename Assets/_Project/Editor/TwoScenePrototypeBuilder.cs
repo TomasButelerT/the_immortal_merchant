@@ -116,6 +116,10 @@ public static class TwoScenePrototypeBuilder
             "prototype_tank", "Prototype Tank Enemy", 60, 1.2f, 15, 1.2f,
             1.6f, 0.85f, 1f,
             new Vector3(1.3f, 1.3f, 1f), new Color(0.55f, 0.2f, 0.8f), tankDrops);
+        tankData.usesAreaAttack = true;
+        tankData.areaAttackRadius = 2.4f;
+        tankData.vulnerableDuration = 1.1f;
+        EditorUtility.SetDirty(tankData);
         EnemyData rangedData = CreateOrUpdateEnemyData(
             "Assets/_Project/ScriptableObjects/Enemies/PrototypeRangedEnemy.asset",
             "prototype_ranged", "Prototype Ranged Enemy", 25, 2f, 10, 1.2f,
@@ -253,6 +257,9 @@ public static class TwoScenePrototypeBuilder
         chaser.followUpWindup = enemyData.followUpWindup;
         chaser.retreatSpeed = enemyData.retreatSpeed;
         chaser.retreatDuration = enemyData.retreatDuration;
+        chaser.usesAreaAttack = enemyData.usesAreaAttack;
+        chaser.areaAttackRadius = enemyData.areaAttackRadius;
+        chaser.vulnerableDuration = enemyData.vulnerableDuration;
 
         PrefabUtility.SaveAsPrefabAsset(root, path);
         PrefabUtility.UnloadPrefabContents(root);
@@ -377,6 +384,9 @@ public static class TwoScenePrototypeBuilder
         data.followUpWindup = 0.18f;
         data.retreatSpeed = 0f;
         data.retreatDuration = 0f;
+        data.usesAreaAttack = false;
+        data.areaAttackRadius = 2.4f;
+        data.vulnerableDuration = 1.1f;
         data.scale = scale;
         data.prototypeColor = color;
         data.dropTable = dropTable;

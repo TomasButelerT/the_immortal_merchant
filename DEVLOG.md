@@ -122,6 +122,19 @@ El desarrollo sigue una regla deliberada: primero validar sistemas y sensaciones
 - Al terminar la secuencia, el enemigo retrocede para crear distancia.
 - La invulnerabilidad de `0.75 s` evita que ambos golpes castiguen injustamente si el primero conecta; el segundo funciona como presion de posicionamiento.
 - El comportamiento fue probado correctamente en Unity.
+- Commit del bloque: `0209d16`.
+
+### Golpe de area del enemigo resistente
+
+- El tanque violeta recibio un ataque de area propio en lugar de la embestida comun.
+- La carga muestra un circulo que crece de violeta a rojo y permite escapar con movimiento o dash.
+- El impacto causa `15 HP` de dano dentro del radio peligroso.
+- Una onda expansiva provisional y una sacudida de camara refuerzan el momento del golpe.
+- Despues del impacto aparece un indicador verde durante `1.1 s`; el tanque queda quieto y vulnerable para contraatacar.
+- Los enemigos quedan anclados durante cargas y recuperaciones para que las colisiones con el Player no les transmitan inercia ni los desplacen por la sala.
+- Se agrego dano por contacto a todos los enemigos, incluidos los de distancia.
+- El dano por contacto respeta la invulnerabilidad del Player y no se aplica continuamente en cada frame.
+- Se validaron nuevamente ataques normales, ataque doble, proyectiles, golpe de area, knockback y contacto.
 - Estado: validado y pendiente de commit manual.
 
 ## Estado actual
@@ -130,7 +143,7 @@ El desarrollo sigue una regla deliberada: primero validar sistemas y sensaciones
 - Rama activa: `feature/prototype-0.2`.
 - El arte, nombres y balance siguen siendo provisionales.
 - El foco actual es demostrar que la arquitectura soporta enemigos con mecanicas realmente distintas.
-- Proximos candidatos: golpe de area del tanque, retirada y patrones del enemigo a distancia, y nuevas respuestas defensivas del Player.
+- Proximos candidatos: nuevos patrones del enemigo a distancia y nuevas respuestas defensivas del Player.
 
 ## Forma de trabajo acordada
 

@@ -16,6 +16,9 @@ public class EnemyData : ScriptableObject
     public float followUpWindup = 0.18f;
     public float retreatSpeed;
     public float retreatDuration;
+    public bool usesAreaAttack;
+    public float areaAttackRadius = 2.4f;
+    public float vulnerableDuration = 1.1f;
     public bool usesRangedAttack;
     public float preferredDistance = 4f;
     public float projectileSpeed = 7f;

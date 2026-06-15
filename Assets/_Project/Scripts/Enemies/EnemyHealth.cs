@@ -35,6 +35,16 @@ public class EnemyHealth : MonoBehaviour
         {
             healthBar = gameObject.AddComponent<EnemyHealthBar>();
         }
+
+        EnemyContactDamage contactDamage = GetComponent<EnemyContactDamage>();
+        if (contactDamage == null)
+        {
+            contactDamage = gameObject.AddComponent<EnemyContactDamage>();
+        }
+
+        int damage = enemyData != null ? enemyData.contactDamage : 10;
+        float interval = enemyData != null ? enemyData.damageInterval : 1f;
+        contactDamage.Configure(damage, interval);
     }
 
     public void TakeDamage(int amount)
@@ -167,6 +177,46 @@ public class EnemyHealth : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         enemyRenderer.color = normalColor;
         hitFlashRoutine = null;
+    }
+}
+
+public class EnemyContactDamage : MonoBehaviour
+{
+    private int damage = 10;
+    private float damageInterval = 1f;
+    private float nextDamageTime;
+
+    public void Configure(int amount, float interval)
+    {
+        damage = Mathf.Max(0, amount);
+        damageInterval = Mathf.Max(0.1f, interval);
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        TryDamagePlayer(collision.collider);
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        TryDamagePlayer(collision.collider);
+    }
+
+    private void TryDamagePlayer(Collider2D other)
+    {
+        if (Time.time < nextDamageTime || !other.CompareTag("Player"))
+        {
+            return;
+        }
+
+        PlayerHealth playerHealth = other.GetComponent<PlayerHealth>();
+        if (playerHealth == null)
+        {
+            return;
+        }
+
+        playerHealth.TakeDamage(damage, transform.position);
+        nextDamageTime = Time.time + damageInterval;
     }
 }
 

@@ -208,3 +208,6 @@ MonoBehaviour:
   followUpWindup: 0.18
   retreatSpeed: 5
   retreatDuration: 0.18
+  usesAreaAttack: 0
+  areaAttackRadius: 2.4
+  vulnerableDuration: 1.1

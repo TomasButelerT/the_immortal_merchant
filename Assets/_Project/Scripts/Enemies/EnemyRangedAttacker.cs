@@ -71,7 +71,7 @@ public class EnemyRangedAttacker : MonoBehaviour
     private IEnumerator ShootRoutine()
     {
         isAttacking = true;
-        body.linearVelocity = Vector2.zero;
+        SetAnchored(true);
         SetAimVisible(true);
 
         yield return new WaitForSeconds(enemyData.attackWindup);
@@ -88,16 +88,29 @@ public class EnemyRangedAttacker : MonoBehaviour
 
         SetAimVisible(false);
         yield return new WaitForSeconds(enemyData.attackRecovery);
+        SetAnchored(false);
         nextAttackTime = Time.time + enemyData.damageInterval;
         isAttacking = false;
     }
 
     private IEnumerator KnockbackRoutine(Vector2 direction, float force, float duration)
     {
+        SetAnchored(false);
         isKnockedBack = true;
         body.linearVelocity = direction * force;
         yield return new WaitForSeconds(duration);
         isKnockedBack = false;
+    }
+
+    private void SetAnchored(bool anchored)
+    {
+        if (body == null || !body.simulated)
+        {
+            return;
+        }
+
+        body.linearVelocity = Vector2.zero;
+        body.bodyType = anchored ? RigidbodyType2D.Kinematic : RigidbodyType2D.Dynamic;
     }
 
     private void CreateAimLine()
@@ -146,6 +159,7 @@ public class EnemyRangedAttacker : MonoBehaviour
         StopAllCoroutines();
         isAttacking = false;
         isKnockedBack = false;
+        SetAnchored(false);
         SetAimVisible(false);
 
         if (body != null)
