@@ -12,6 +12,10 @@ public class EnemyData : ScriptableObject
     public float attackRange = 1.25f;
     public float attackWindup = 0.45f;
     public float attackRecovery = 0.65f;
+    public int meleeAttackCount = 1;
+    public float followUpWindup = 0.18f;
+    public float retreatSpeed;
+    public float retreatDuration;
     public bool usesRangedAttack;
     public float preferredDistance = 4f;
     public float projectileSpeed = 7f;

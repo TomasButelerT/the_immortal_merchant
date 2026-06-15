@@ -204,3 +204,7 @@ MonoBehaviour:
   attackRange: 1.25
   attackWindup: 0.45
   attackRecovery: 0.65
+  attackCount: 1
+  followUpWindup: 0.18
+  retreatSpeed: 0
+  retreatDuration: 0

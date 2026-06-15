@@ -106,6 +106,11 @@ public static class TwoScenePrototypeBuilder
             "prototype_fast", "Prototype Fast Enemy", 20, 3.5f, 7, 0.7f,
             1.05f, 0.25f, 0.4f,
             new Vector3(0.75f, 0.75f, 1f), new Color(1f, 0.45f, 0.12f), fastDrops);
+        fastData.meleeAttackCount = 2;
+        fastData.followUpWindup = 0.18f;
+        fastData.retreatSpeed = 5f;
+        fastData.retreatDuration = 0.18f;
+        EditorUtility.SetDirty(fastData);
         EnemyData tankData = CreateOrUpdateEnemyData(
             "Assets/_Project/ScriptableObjects/Enemies/PrototypeTankEnemy.asset",
             "prototype_tank", "Prototype Tank Enemy", 60, 1.2f, 15, 1.2f,
@@ -244,6 +249,10 @@ public static class TwoScenePrototypeBuilder
         chaser.attackRange = enemyData.attackRange;
         chaser.attackWindup = enemyData.attackWindup;
         chaser.attackRecovery = enemyData.attackRecovery;
+        chaser.attackCount = enemyData.meleeAttackCount;
+        chaser.followUpWindup = enemyData.followUpWindup;
+        chaser.retreatSpeed = enemyData.retreatSpeed;
+        chaser.retreatDuration = enemyData.retreatDuration;
 
         PrefabUtility.SaveAsPrefabAsset(root, path);
         PrefabUtility.UnloadPrefabContents(root);
@@ -364,6 +373,10 @@ public static class TwoScenePrototypeBuilder
         data.attackRange = attackRange;
         data.attackWindup = attackWindup;
         data.attackRecovery = attackRecovery;
+        data.meleeAttackCount = 1;
+        data.followUpWindup = 0.18f;
+        data.retreatSpeed = 0f;
+        data.retreatDuration = 0f;
         data.scale = scale;
         data.prototypeColor = color;
         data.dropTable = dropTable;

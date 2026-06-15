@@ -11,6 +11,10 @@ public class EnemyChaser : MonoBehaviour
     public float attackRange = 1.25f;
     public float attackWindup = 0.45f;
     public float attackRecovery = 0.65f;
+    public int attackCount = 1;
+    public float followUpWindup = 0.18f;
+    public float retreatSpeed;
+    public float retreatDuration;
 
     private Rigidbody2D body;
     private Transform player;
@@ -33,6 +37,10 @@ public class EnemyChaser : MonoBehaviour
             attackRange = enemyData.attackRange;
             attackWindup = enemyData.attackWindup;
             attackRecovery = enemyData.attackRecovery;
+            attackCount = enemyData.meleeAttackCount;
+            followUpWindup = enemyData.followUpWindup;
+            retreatSpeed = enemyData.retreatSpeed;
+            retreatDuration = enemyData.retreatDuration;
         }
 
         CreateAttackTelegraph();
@@ -96,21 +104,57 @@ public class EnemyChaser : MonoBehaviour
     {
         isAttacking = true;
         body.linearVelocity = Vector2.zero;
-        SetTelegraphVisible(true);
-        float windupElapsed = 0f;
+        int strikes = Mathf.Max(1, attackCount);
 
-        while (windupElapsed < attackWindup)
+        for (int strike = 0; strike < strikes; strike++)
         {
-            windupElapsed += Time.deltaTime;
-            float progress = attackWindup > 0f ? Mathf.Clamp01(windupElapsed / attackWindup) : 1f;
-            SetTelegraphColor(Color.Lerp(
-                new Color(1f, 0.65f, 0.1f, 0.9f),
-                new Color(1f, 0.1f, 0.1f, 1f),
-                progress));
+            float windup = strike == 0 ? attackWindup : followUpWindup;
+            yield return StartCoroutine(StrikeWindup(windup, strike));
+            yield return StartCoroutine(PerformStrike());
+            SetTelegraphVisible(false);
+            SetTelegraphRadius(attackRange);
+
+            if (strike < strikes - 1)
+            {
+                yield return new WaitForSeconds(0.1f);
+            }
+        }
+
+        if (retreatSpeed > 0f && retreatDuration > 0f && player != null)
+        {
+            Vector2 retreatDirection = (body.position - (Vector2)player.position).normalized;
+            body.linearVelocity = retreatDirection * retreatSpeed;
+            yield return new WaitForSeconds(retreatDuration);
+            body.linearVelocity = Vector2.zero;
+        }
+
+        yield return new WaitForSeconds(attackRecovery);
+
+        nextAttackTime = Time.time + damageInterval;
+        isAttacking = false;
+        attackRoutine = null;
+    }
+
+    private IEnumerator StrikeWindup(float duration, int strikeIndex)
+    {
+        SetTelegraphVisible(true);
+        float elapsed = 0f;
+        Color startColor = strikeIndex == 0
+            ? new Color(1f, 0.65f, 0.1f, 0.9f)
+            : new Color(1f, 0.9f, 0.2f, 0.95f);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = duration > 0f ? Mathf.Clamp01(elapsed / duration) : 1f;
+            SetTelegraphColor(Color.Lerp(startColor, new Color(1f, 0.1f, 0.1f, 1f), progress));
             SetTelegraphRadius(Mathf.Lerp(attackRange, attackRange * 0.65f, progress));
             yield return null;
         }
+    }
 
+    private IEnumerator PerformStrike()
+    {
         Vector2 attackDirection = player != null
             ? ((Vector2)player.position - body.position).normalized
             : Vector2.zero;
@@ -127,15 +171,6 @@ public class EnemyChaser : MonoBehaviour
                 playerHealth.TakeDamage(contactDamage, transform.position);
             }
         }
-
-        yield return new WaitForSeconds(0.1f);
-        SetTelegraphVisible(false);
-        SetTelegraphRadius(attackRange);
-        yield return new WaitForSeconds(attackRecovery);
-
-        nextAttackTime = Time.time + damageInterval;
-        isAttacking = false;
-        attackRoutine = null;
     }
 
     private IEnumerator KnockbackRoutine(Vector2 direction, float force, float duration)

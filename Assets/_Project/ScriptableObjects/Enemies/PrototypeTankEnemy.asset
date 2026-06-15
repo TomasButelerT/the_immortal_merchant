@@ -21,6 +21,10 @@ MonoBehaviour:
   attackRange: 1.6
   attackWindup: 0.85
   attackRecovery: 1
+  meleeAttackCount: 1
+  followUpWindup: 0.18
+  retreatSpeed: 0
+  retreatDuration: 0
   usesRangedAttack: 0
   preferredDistance: 4
   projectileSpeed: 7
